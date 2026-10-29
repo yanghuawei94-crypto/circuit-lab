@@ -126,7 +126,7 @@ function mkComp(type,x,y,rot=0){
   if(type==='L') c.val=1e-2;
   if(type==='CLK') c.freq=2;
   if(type==='IN'||type==='TFF') c.on=false;
-  if(type==='NPN'||type==='PNP'){ c.beta=100; c.sat=1e-15; c._vbe=0; }
+  if(type==='NPN'||type==='PNP'){ c.beta=100; c.sat=1e-15; c._vbe=0; c._vbc=0; }
   if(type==='NMOS'||type==='PMOS'){ c.k=2e-3; c.vth=2; c._vgs=0; c._vds=0; }
   if(type==='OPAMP'){ c.gain=1e5; c.vsat=12; c.ro=10; c._vd=0; }
   if(type==='T555'){ c._q=0; c._dis=true; c._vcc=0; }   // 内部锁存状态（瞬态，不入存档）
@@ -251,23 +251,29 @@ function stampVCCS(A,b,nOut,nRef,c1,c2,gm,I0){
   if(nOut>0)b[nOut-1]-=I0;
   if(nRef>0)b[nRef-1]+=I0;
 }
-/* BJT：Ebers-Moll 简化式（正向放大区），基极电流 = Ic/β，牛顿线性化
-   PNP 视为"取反的 NPN"：虚拟发射极=ps[1]、虚拟集电极=ps[2]，电流源偏置取反 */
+/* BJT：Ebers-Moll 全模型（正向 + 反向传输电流），放大/饱和/截止区连续过渡
+   PNP 视为"取反的 NPN"：虚拟发射极=ps[1]、虚拟集电极=ps[2]，偏置项取反 */
 function stampBJT(A,b,gS,iS,c,ps){
   const npn=c.type==='NPN', pol=npn?1:-1;
   const nb=ps[0], nC=npn?ps[1]:ps[2], nE=npn?ps[2]:ps[1];
-  const beta=Math.max(10,c.beta||100), Is=c.sat||1e-15;
-  const vbe=Math.max(0,c._vbe||0);             // 已按极性折算的正向结电压
-  const ev=Math.exp(Math.min(40,vbe/VT));
-  const ic=Is*(ev-1);                          // 集电极电流（极性已折算）
-  const gm=Math.max(Is/VT*ev,1e-12);           // dIc/dVbe
-  const ieq=ic-gm*vbe;
-  const gbe=gm/beta+1e-9;                      // 基极-发射极导通
-  const ibeq=ic/beta-gbe*vbe;
-  stampVCCS(A,b,nC,nE,nb,nE,gm,pol*ieq);       // 集电极电流受 Vbe 控制
-  gS(nb,nE,gbe); iS(nb,nE,pol*ibeq);           // 基极电流通路
-  gS(nb,nC,1e-9);                              // 基极-集电极泄漏（防浮空）
-  c._ic=ic; c._gm=gm;
+  const beta=Math.max(10,c.beta||100), br=Math.max(1,c.br||1), Is=c.sat||1e-15;
+  const vbe=Math.max(-5,Math.min(0.95,c._vbe||0));   // 正向结电压（按极性折算）
+  const vbc=Math.max(-5,Math.min(0.95,c._vbc||0));   // 基-集结电压（按极性折算）
+  const q1=Math.exp(Math.min(40,vbe/VT)), q2=Math.exp(Math.min(40,vbc/VT));
+  const IF=Is*(q1-1), IR=Is*(q2-1);
+  const ic=(IF-IR)-IR/br;              // 传输电流 − 反向复合电流 → 集电极电流
+  const ib=IF/beta+IR/br;              // 基极电流
+  const gmf=Math.max(Is/VT*q1,1e-12);  // ∂Ic/∂vbe
+  const gmr=-Is/VT*q2*(1+1/br);        // ∂Ic/∂vbc（负：集电结正偏时 Ic 下降）
+  const gbe=gmf/beta, gbc=Is/VT*q2/br;
+  const i0c=ic-gmf*vbe-gmr*vbc;        // 线性化偏置
+  const i0b=ib-gbe*vbe-gbc*vbc;
+  stampVCCS(A,b,nC,nE,nb,nE,gmf,pol*i0c);   // Ic 的正向分量受 Vbe 控制
+  stampVCCS(A,b,nC,nE,nb,nC,gmr,0);         // Ic 的反向分量受 Vbc 控制
+  stampVCCS(A,b,nb,nE,nb,nE,gbe,pol*i0b);   // Ib 的正向分量
+  stampVCCS(A,b,nb,nE,nb,nC,gbc,0);         // Ib 的反向分量
+  gS(nb,nC,1e-12);                          // 极小泄漏（防完全浮空）
+  c._ic=ic; c._ib=ib; c._gm=gmf;
 }
 /* MOSFET：平滑饱和模型 I = k·Vds·Vov²/(Vov+2Vds)
    小 Vds 时退化为线性区 k·Vov·Vds，大 Vds 时渐近饱和 k·Vov²/2，无区域切换跳变 */
@@ -433,14 +439,17 @@ function stepOnce(){
         c._vg=nv;
       } else if(c.type==='NPN'||c.type==='PNP'){
         const npn=c.type==='NPN';
-        const nE=npn?ps[2]:ps[1];
-        const prev=c._vbe||0;
-        // NPN: Vbe = Vb-Ve；PNP: Veb = Ve-Vb（统一取"正向结电压"）
+        const nE=npn?ps[2]:ps[1], nC=npn?ps[1]:ps[2];
+        const pbe=c._vbe||0, pbc=c._vbc||0;
+        // NPN: Vbe = Vb-Ve, Vbc = Vb-Vc；PNP: 取反（统一为"正向结电压"）
         let vbe=npn ? V(ps[0])-V(nE) : V(nE)-V(ps[0]);
+        let vbc=npn ? V(ps[0])-V(nC) : V(nC)-V(ps[0]);
         vbe=Math.max(-0.9,Math.min(0.95,vbe));                  // 结电压限幅
-        if(Math.abs(vbe-prev)>0.15) vbe=prev+0.15*Math.sign(vbe-prev); // 牛顿步长限制
-        if(Math.abs(vbe-prev)>1e-5) conv=false;
-        c._vbe=vbe;
+        vbc=Math.max(-5,Math.min(0.95,vbc));
+        if(Math.abs(vbe-pbe)>0.15) vbe=pbe+0.15*Math.sign(vbe-pbe);   // 牛顿步长限制
+        if(vbc>-1&&Math.abs(vbc-pbc)>0.15) vbc=pbc+0.15*Math.sign(vbc-pbc); // 深反偏直接跳
+        if(Math.abs(vbe-pbe)>1e-5||Math.abs(vbc-pbc)>1e-5) conv=false;
+        c._vbe=vbe; c._vbc=vbc;
       } else if(c.type==='NMOS'||c.type==='PMOS'){
         const nmos=c.type==='NMOS', pol=nmos?1:-1;
         const nD=nmos?ps[1]:ps[2], nS=nmos?ps[2]:ps[1];
@@ -932,8 +941,19 @@ function showProps(){
 }
 setInterval(()=>{   // 属性面板实时刷新
   const rt=document.getElementById('rt');
-  if(rt&&propsTarget&&propsTarget.type) rt.textContent=`${compV(propsTarget).toFixed(3)} V · ${(Math.abs(propsTarget.cur||0)*1000).toFixed(2)} mA`;
+  if(!rt||!propsTarget||!propsTarget.type) return;
+  const c=propsTarget;
+  let txt=`${compV(c).toFixed(3)} V · ${(Math.abs(c.cur||0)*1000).toFixed(2)} mA`;
+  if(c.type==='NPN'||c.type==='PNP') txt+=` · ${bjtRegion(c)}`;
+  rt.textContent=txt;
 },300);
+/* BJT 工作区判断：Vbc 正偏→饱和，Vbe 未导通→截止，其余→放大 */
+function bjtRegion(c){
+  const vbe=c._vbe||0, vbc=c._vbc||0;
+  if(vbe<0.45) return '截止区';
+  if(vbc>0.4) return '饱和区';
+  return '放大区';
+}
 
 /* ================= 撤销 / 保存 / 导入导出（M6-1） ================= */
 const STORE_KEY='circuit-lab:m6';
