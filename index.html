@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M5 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器，非线性牛顿迭代引擎，四通道示波器，电流动画，桥式整流/共射放大/MOS 开关/运放放大四套预置演示。">
-<title>M5 · 电路实验室</title>
+<meta name="description" content="M6 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/共射放大/MOS 开关/运放放大等预置演示。">
+<title>M6 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:#17202a;overflow:hidden;}
-#topbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border-bottom:1px solid var(--rule);}
-#topbar b{font-size:15px;}
-.tbtn{padding:6px 12px;border:1px solid var(--rule);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:#17202a;overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+#topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--rule);flex-wrap:wrap;row-gap:6px;}
+#topbar b{font-size:15px;white-space:nowrap;flex:0 0 auto;}
+.tbtn{padding:6px 10px;border:1px solid var(--rule);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;white-space:nowrap;flex:0 0 auto;}
 .tbtn:hover{border-color:var(--blue);color:var(--blue);}
 .tbtn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
-#status{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
-#main{display:grid;grid-template-columns:132px 1fr 250px;grid-template-rows:1fr 140px;height:calc(100vh - 45px);}
+.tbtn:disabled{opacity:.4;cursor:default;}
+.tbtn:disabled:hover{border-color:var(--rule);color:var(--ink);}
+#status{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px;flex:0 1 auto;}
+#main{display:grid;grid-template-columns:132px 1fr 250px;grid-template-rows:1fr 140px;flex:1;min-height:0;}
 #palette{background:#fff;border-right:1px solid var(--rule);padding:10px 8px;overflow-y:auto;grid-row:1/2;}
 #palette h4{font-size:11px;color:var(--muted);letter-spacing:1px;margin:6px 4px 8px;}
 .pal{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:1.5px solid transparent;border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);}
@@ -41,7 +43,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </head>
 <body>
 <div id="topbar">
-  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M5</span></b>
+  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M6</span></b>
   <button class="tbtn on" id="runBtn">⏸ 暂停</button>
   <button class="tbtn" id="demoBtn">🌉 桥式整流</button>
   <button class="tbtn" id="demoCntBtn">🔢 4位计数器</button>
@@ -49,6 +51,13 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
   <button class="tbtn" id="demoMosBtn">⚡ MOS 开关</button>
   <button class="tbtn" id="demoOpBtn">🎚 运放放大</button>
   <button class="tbtn" id="clearBtn">🗑 清空</button>
+  <button class="tbtn" id="undoBtn" title="撤销 (Ctrl+Z)">撤销</button>
+  <button class="tbtn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">重做</button>
+  <button class="tbtn" id="saveBtn" title="保存到本机浏览器">保存</button>
+  <button class="tbtn" id="loadBtn" title="读取本机保存的电路">读取</button>
+  <button class="tbtn" id="exportBtn" title="导出 JSON 文件">导出</button>
+  <button class="tbtn" id="importBtn" title="导入 JSON 文件">导入</button>
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
   <span style="font-size:12px;color:var(--muted)">速度</span>
   <select id="speed" style="padding:5px;border:1px solid var(--rule);border-radius:7px;">
     <option value="1">×1</option><option value="4" selected>×4</option><option value="16">×16</option>
@@ -65,7 +74,9 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
       · 点引脚起线，再点另一引脚收线<br>
       · 双击开关切换通/断<br>
       · 单击选中元件进示波器；<span class="kbd">Shift+点击</span> 追加通道（最多 4 路）<br>
-      · 黄点 = 电流方向与大小
+      · 黄点 = 电流方向与大小<br>
+      · <span class="kbd">Ctrl+Z</span> 撤销 · <span class="kbd">Ctrl+Shift+Z</span> 重做<br>
+      · 💾 保存到本机，⬇ 导出 JSON 换设备
     </div>
   </div>
   <div id="scopeWrap"><canvas id="scope"></canvas><div id="scopeTitle">示波器：未选中元件</div><div id="scopeCh"></div></div>
@@ -687,7 +698,7 @@ function tick(){
   draw(); drawScope();
   requestAnimationFrame(tick);
 }
-function setStatus(s){ document.getElementById('status').textContent=s; }
+function setStatus(s){ const el=document.getElementById('status'); el.textContent=s; el.title=s; }
 
 /* ================= 交互 ================= */
 const cvEl=cv;
@@ -705,30 +716,35 @@ function hitWire(p){
   }
   return null;
 }
-let dragC=null, dragOff=null;
+let dragC=null, dragOff=null, dragStart=null, dragSnapJson=null;
 cv.addEventListener('mousemove',e=>{ mouse=evPos(e);
   if(dragC){ const p=evPos(e), s=snap({x:p.x-dragOff.x,y:p.y-dragOff.y});
     if(s.x!==dragC.x||s.y!==dragC.y){ dragC.x=s.x; dragC.y=s.y; topoDirty=true; } }
 });
 cv.addEventListener('mousedown',e=>{
   const p=evPos(e), s=snap(p);
-  if(placing){ comps.push(mkComp(placing,s.x,s.y,placingRot)); topoDirty=true; if(!e.shiftKey) placing=null; return; }
+  if(placing){ pushUndo(); comps.push(mkComp(placing,s.x,s.y,placingRot)); topoDirty=true; if(!e.shiftKey) placing=null; return; }
   const pin=hitPin(p); if(pin){ wireFrom={...pin}; return; }
   const c=hitComp(p);
   if(c){
     if(e.shiftKey){ const i=selComps.indexOf(c); if(i>=0) selComps.splice(i,1); else if(selComps.length<4) selComps.push(c); }
     else selComps=[c];
-    propsTarget=c; showProps(); dragC=c; dragOff={x:p.x-c.x,y:p.y-c.y}; return;
+    propsTarget=c; showProps(); dragC=c; dragOff={x:p.x-c.x,y:p.y-c.y};
+    dragStart={x:c.x,y:c.y}; dragSnapJson=JSON.stringify(serialize());   // 拖动前快照，位置变了才入栈
+    return;
   }
   const w=hitWire(p);
   if(w){ propsTarget=w; showProps(); return; }
   selComps=[]; propsTarget=null; showProps();
 });
-window.addEventListener('mouseup',()=>{ dragC=null; });
+window.addEventListener('mouseup',()=>{
+  if(dragC&&dragSnapJson&&(dragC.x!==dragStart.x||dragC.y!==dragStart.y)) pushUndoJson(dragSnapJson);
+  dragC=null; dragOff=null; dragStart=null; dragSnapJson=null;
+});
 cv.addEventListener('mouseup',e=>{
   if(wireFrom){
     const p=evPos(e), pin=hitPin(p)||snap(p);
-    if(Math.hypot(pin.x-wireFrom.x,pin.y-wireFrom.y)>GRID){ wires.push({id:nid++,a:{...wireFrom},b:{...pin}}); topoDirty=true; }
+    if(Math.hypot(pin.x-wireFrom.x,pin.y-wireFrom.y)>GRID){ pushUndo(); wires.push({id:nid++,a:{...wireFrom},b:{...pin}}); topoDirty=true; }
     wireFrom=null;
   }
 });
@@ -738,12 +754,16 @@ cv.addEventListener('dblclick',e=>{
   if(c&&c.type==='IN'){ c.on=!c.on; showProps(); }
 });
 window.addEventListener('keydown',e=>{
+  const mod=e.metaKey||e.ctrlKey;
+  if(mod&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); if(e.shiftKey) doRedo(); else doUndo(); return; }
+  if(mod&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); doRedo(); return; }
   if(e.key==='Escape'){ placing=null; wireFrom=null; }
   if((e.key==='r'||e.key==='R')){
     if(placing) placingRot^=1;
     else if(propsTarget&&propsTarget.type&&!DIGI_SET.has(propsTarget.type)){ propsTarget.rot^=1; topoDirty=true; }
   }
   if((e.key==='Delete'||e.key==='Backspace')&&!e.target.matches('input,select')&&propsTarget){
+    pushUndo();
     if(propsTarget.type){ comps=comps.filter(c=>c!==propsTarget); selComps=selComps.filter(c=>c!==propsTarget); }
     else wires=wires.filter(w=>w!==propsTarget);
     propsTarget=null; showProps(); topoDirty=true;
@@ -755,7 +775,7 @@ function showProps(){
   const box=document.getElementById('propsBody'), t=propsTarget;
   if(!t){ box.innerHTML='<p style="color:var(--muted);font-size:12px">点击画布中的元件查看/修改参数</p>'; return; }
   if(t.a){ box.innerHTML=`<div class="row"><label>类型</label><div>导线</div></div><button class="dbtn" id="delB">删除导线</button>`;
-    document.getElementById('delB').onclick=()=>{ wires=wires.filter(w=>w!==t); propsTarget=null; showProps(); topoDirty=true; }; return; }
+    document.getElementById('delB').onclick=()=>{ pushUndo(); wires=wires.filter(w=>w!==t); propsTarget=null; showProps(); topoDirty=true; }; return; }
   const c=t;
   let h=`<div class="row"><label>类型</label><div><b>${DEF[c.type].name}</b></div></div>`;
   if(c.type==='V') h+=`<div class="row"><label>电压（V）</label><input id="pv" type="number" step="any" value="${c.val}"></div>`;
@@ -781,24 +801,136 @@ function showProps(){
   h+=`<button class="dbtn" id="delB">删除元件</button>`;
   box.innerHTML=h;
   const g=id=>document.getElementById(id);
-  if(g('pv')) g('pv').onchange=()=>{ const v=parseFloat(g('pv').value); if(isFinite(v)&&v!==0){c.val=v; topoDirty=true;} };
-  if(g('pw')) g('pw').onchange=()=>c.wave=g('pw').value;
-  if(g('pa')) g('pa').onchange=()=>c.amp=parseFloat(g('pa').value)||0;
-  if(g('pf')) g('pf').onchange=()=>c.freq=Math.max(0.01,parseFloat(g('pf').value)||1);
-  if(g('pclk')) g('pclk').onchange=()=>c.freq=Math.max(0.01,parseFloat(g('pclk').value)||1);
-  if(g('po')) g('po').onchange=()=>c.offset=parseFloat(g('po').value)||0;
-  if(g('pbt')) g('pbt').onchange=()=>c.beta=Math.max(10,parseFloat(g('pbt').value)||100);
-  if(g('pvt')) g('pvt').onchange=()=>c.vth=Math.max(0.1,parseFloat(g('pvt').value)||2);
-  if(g('pkk')) g('pkk').onchange=()=>c.k=Math.max(1e-6,parseFloat(g('pkk').value)||2e-3);
-  if(g('pga')) g('pga').onchange=()=>c.gain=Math.max(10,parseFloat(g('pga').value)||1e5);
-  if(g('pvs')) g('pvs').onchange=()=>c.vsat=Math.max(0.5,parseFloat(g('pvs').value)||12);
-  if(g('pr')) g('pr').oninput=()=>{ c.ratio=+g('pr').value; g('prv').textContent=fmtR(Math.max(10,c.rmax*c.ratio/100)); topoDirty=true; };
-  g('delB').onclick=()=>{ comps=comps.filter(x=>x!==c); selComps=selComps.filter(x=>x!==c); propsTarget=null; showProps(); topoDirty=true; };
+  /* 每次参数变更前先压撤销栈，保证一次操作 = 一步撤销 */
+  const onChg=(id,fn)=>{ const el=g(id); if(el) el.onchange=()=>{ pushUndo(); fn(el.value); }; };
+  onChg('pv',v=>{ const n=parseFloat(v); if(isFinite(n)&&n!==0){ c.val=n; topoDirty=true; } });
+  onChg('pw',v=>c.wave=v);
+  onChg('pa',v=>c.amp=parseFloat(v)||0);
+  onChg('pf',v=>c.freq=Math.max(0.01,parseFloat(v)||1));
+  onChg('pclk',v=>c.freq=Math.max(0.01,parseFloat(v)||1));
+  onChg('po',v=>c.offset=parseFloat(v)||0);
+  onChg('pbt',v=>c.beta=Math.max(10,parseFloat(v)||100));
+  onChg('pvt',v=>c.vth=Math.max(0.1,parseFloat(v)||2));
+  onChg('pkk',v=>c.k=Math.max(1e-6,parseFloat(v)||2e-3));
+  onChg('pga',v=>c.gain=Math.max(10,parseFloat(v)||1e5));
+  onChg('pvs',v=>c.vsat=Math.max(0.5,parseFloat(v)||12));
+  const prEl=g('pr');
+  if(prEl){
+    prEl.oninput=()=>{
+      if(!c._potDrag){ pushUndo(); c._potDrag=true; }   // 一次拖动只记一步
+      c.ratio=+prEl.value;
+      g('prv').textContent=fmtR(Math.max(10,c.rmax*c.ratio/100));
+      topoDirty=true;
+    };
+    prEl.onchange=()=>{ c._potDrag=false; };
+  }
+  g('delB').onclick=()=>{ pushUndo(); comps=comps.filter(x=>x!==c); selComps=selComps.filter(x=>x!==c); propsTarget=null; showProps(); topoDirty=true; };
 }
 setInterval(()=>{   // 属性面板实时刷新
   const rt=document.getElementById('rt');
   if(rt&&propsTarget&&propsTarget.type) rt.textContent=`${compV(propsTarget).toFixed(3)} V · ${(Math.abs(propsTarget.cur||0)*1000).toFixed(2)} mA`;
 },300);
+
+/* ================= 撤销 / 保存 / 导入导出（M6-1） ================= */
+const STORE_KEY='circuit-lab:m6';
+const MAX_UNDO=60;
+let undoStack=[], redoStack=[];
+
+function serialize(){
+  const compsData=comps.map(c=>{
+    const o={};
+    for(const k in c){
+      if(k[0]==='_'||k==='cur'||k==='vp'||k==='ip') continue;   // 跳过仿真瞬态字段
+      o[k]=c[k];
+    }
+    return o;
+  });
+  return {v:1, comps:compsData, wires:wires.map(w=>({id:w.id,a:{...w.a},b:{...w.b}}))};
+}
+function deserialize(d){
+  if(!d||!Array.isArray(d.comps)) return false;
+  comps=d.comps.map(o=>({...o}));
+  wires=(d.wires||[]).map(w=>({id:w.id,a:{...w.a},b:{...w.b}}));
+  let mx=1;
+  for(const c of comps) mx=Math.max(mx,c.id||0);
+  for(const w of wires) mx=Math.max(mx,w.id||0);
+  nid=mx+1;
+  selComps=[]; propsTarget=null; chBuf=new Map(); simTime=0; nodeV=[];
+  topoDirty=true;
+  showProps();
+  return true;
+}
+function syncUndoBtns(){
+  const u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn');
+  if(u) u.disabled=!undoStack.length;
+  if(r) r.disabled=!redoStack.length;
+}
+function saveLocal(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(serialize())); }catch(e){}
+}
+function pushUndoJson(json){
+  undoStack.push(json);
+  if(undoStack.length>MAX_UNDO) undoStack.shift();
+  redoStack.length=0;
+  syncUndoBtns(); saveLocal();
+}
+function pushUndo(){ pushUndoJson(JSON.stringify(serialize())); }
+function restoreFrom(json){
+  try{ if(deserialize(JSON.parse(json))){ syncUndoBtns(); saveLocal(); } }catch(e){}
+}
+function doUndo(){
+  if(!undoStack.length) return;
+  redoStack.push(JSON.stringify(serialize()));
+  restoreFrom(undoStack.pop());
+  setStatus('已撤销（还可撤销 '+undoStack.length+' 步）');
+}
+function doRedo(){
+  if(!redoStack.length) return;
+  undoStack.push(JSON.stringify(serialize()));
+  restoreFrom(redoStack.pop());
+  setStatus('已重做');
+}
+function loadLocal(){
+  let s=null;
+  try{ s=localStorage.getItem(STORE_KEY); }catch(e){ setStatus('⚠ 本机存储不可用'); return; }
+  if(!s){ setStatus('本机没有已保存的电路'); return; }
+  pushUndo(); restoreFrom(s);
+  setStatus('已读取本机保存的电路');
+}
+function exportFile(){
+  const blob=new Blob([JSON.stringify(serialize(),null,1)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='circuit-lab-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  setStatus('已导出 JSON 文件');
+}
+function importFile(f){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(!Array.isArray(d.comps)) throw new Error('bad');
+      pushUndo(); deserialize(d);
+      setStatus('已导入：'+f.name);
+    }catch(e){ setStatus('⚠ 文件不是有效的电路 JSON'); }
+  };
+  rd.readAsText(f);
+}
+document.getElementById('undoBtn').onclick=doUndo;
+document.getElementById('redoBtn').onclick=doRedo;
+document.getElementById('saveBtn').onclick=()=>{ saveLocal(); setStatus('已保存到本机浏览器（换设备请用导出）'); };
+document.getElementById('loadBtn').onclick=loadLocal;
+document.getElementById('exportBtn').onclick=exportFile;
+document.getElementById('importBtn').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=e=>{
+  const f=e.target.files&&e.target.files[0];
+  if(f) importFile(f);
+  e.target.value='';
+};
+syncUndoBtns();
+setInterval(saveLocal,3000);        // 每 3 秒自动存一份
 
 /* ================= 元件库 ================= */
 const PAL=[
@@ -838,10 +970,11 @@ for(const [t,d] of PAL){
 /* ================= 顶栏 ================= */
 document.getElementById('runBtn').onclick=e=>{ running=!running; e.target.textContent=running?'⏸ 暂停':'▶ 运行'; e.target.classList.toggle('on',running); };
 document.getElementById('speed').onchange=e=>speed=+e.target.value;
-document.getElementById('clearBtn').onclick=()=>{ comps=[];wires=[];selComps=[];propsTarget=null;showProps();topoDirty=true;chBuf=new Map(); };
+document.getElementById('clearBtn').onclick=()=>{ pushUndo(); comps=[];wires=[];selComps=[];propsTarget=null;showProps();topoDirty=true;chBuf=new Map(); };
 
 /* ================= 演示：桥式整流 + 滤波 ================= */
 function demoBridge(){
+  pushUndo();
   comps=[]; wires=[]; selComps=[]; chBuf=new Map();
   const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
   const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
@@ -878,6 +1011,7 @@ document.getElementById('demoBtn').onclick=demoBridge;
 
 /* ================= 演示：4 位波纹计数器（TFF 链 + 逻辑探针） ================= */
 function demoCounter(){
+  pushUndo();
   comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
   const C=(t,x,y)=>{const c=mkComp(t,x,y);comps.push(c);return c;};
   const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
@@ -897,6 +1031,7 @@ document.getElementById('demoCntBtn').onclick=demoCounter;
 
 /* ================= 演示：共射放大（NPN 三极管） ================= */
 function demoAmp(){
+  pushUndo();
   comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
   const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
   const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
@@ -928,6 +1063,7 @@ document.getElementById('demoAmpBtn').onclick=demoAmp;
 
 /* ================= 演示：N-MOSFET 低边开关 ================= */
 function demoMos(){
+  pushUndo();
   comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
   const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
   const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
@@ -949,6 +1085,7 @@ document.getElementById('demoMosBtn').onclick=demoMos;
 
 /* ================= 演示：运放同相放大 ×2 ================= */
 function demoOp(){
+  pushUndo();
   comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
   const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
   const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
@@ -968,7 +1105,13 @@ function demoOp(){
 }
 document.getElementById('demoOpBtn').onclick=demoOp;
 
-demoAmp();
+/* 启动：优先恢复本机保存的电路，否则加载共射放大演示 */
+try{
+  const saved=localStorage.getItem(STORE_KEY);
+  if(!saved||!deserialize(JSON.parse(saved))) demoAmp();
+  else setStatus('已恢复上次保存的电路');
+}catch(e){ demoAmp(); }
+syncUndoBtns();
 tick();
 </script>
 </body>
