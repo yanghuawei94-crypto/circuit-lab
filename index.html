@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M6 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/共射放大/MOS 开关/运放放大等预置演示。">
+<meta name="description" content="M6 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁等预置演示。">
 <title>M6 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
@@ -50,6 +50,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
   <button class="tbtn" id="demoAmpBtn">🔺 共射放大</button>
   <button class="tbtn" id="demoMosBtn">⚡ MOS 开关</button>
   <button class="tbtn" id="demoOpBtn">🎚 运放放大</button>
+  <button class="tbtn" id="demo555Btn">🕒 555 闪烁</button>
   <button class="tbtn" id="clearBtn">🗑 清空</button>
   <button class="tbtn" id="undoBtn" title="撤销 (Ctrl+Z)">撤销</button>
   <button class="tbtn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">重做</button>
@@ -110,6 +111,7 @@ const DEF = {
   NPN:{name:'NPN 三极管'}, PNP:{name:'PNP 三极管'},
   NMOS:{name:'N-MOSFET'}, PMOS:{name:'P-MOSFET'},
   OPAMP:{name:'运算放大器'},
+  T555:{name:'555 定时器'},
 };
 /* 非线性器件：参与牛顿迭代 */
 const NL_SET=new Set(['D','LED','NPN','PNP','NMOS','PMOS','OPAMP']);
@@ -127,6 +129,7 @@ function mkComp(type,x,y,rot=0){
   if(type==='NPN'||type==='PNP'){ c.beta=100; c.sat=1e-15; c._vbe=0; }
   if(type==='NMOS'||type==='PMOS'){ c.k=2e-3; c.vth=2; c._vgs=0; c._vds=0; }
   if(type==='OPAMP'){ c.gain=1e5; c.vsat=12; c.ro=10; c._vd=0; }
+  if(type==='T555'){ c._q=0; c._dis=true; c._vcc=0; }   // 内部锁存状态（瞬态，不入存档）
   return c;
 }
 /* 三端器件的本地方位 → 世界坐标（rot=1 时整体旋转 90°） */
@@ -153,6 +156,8 @@ function pinsOf(c){
       return rotPts(c, [[-40,0],[0,-40],[0,40]]);      // B/G, C/D, E/S
     case 'OPAMP':
       return rotPts(c, [[-40,-15],[-40,15],[40,0]]);   // IN−, IN+, OUT
+    case 'T555':
+      return rotPts(c, [[-50,-30],[-50,0],[-50,30],[50,-30],[50,0],[50,30]]); // TRIG,THR,DIS,VCC,OUT,GND
     default:
       return c.rot ? [{x:c.x,y:c.y-40},{x:c.x,y:c.y+40}]
                    : [{x:c.x-40,y:c.y},{x:c.x+40,y:c.y}];
@@ -311,12 +316,13 @@ function stampOPAMP(A,b,gS,c,ps){
 function assembleSolve(){
   const vsrcs = comps.filter(c=>c.type==='V'||c.type==='VAC');
   const digiRows=[];
+  const t555s = comps.filter(c=>c.type==='T555');
   for(const c of comps){
     if(!c._out||!OUTIDX[c.type]) continue;
     const ps=nOf(c);
     OUTIDX[c.type].forEach((pi,k)=>{ if(ps[pi]>0) digiRows.push({nd:ps[pi], val:c._out[k]}); });
   }
-  const m = (nNodes-1) + vsrcs.length + digiRows.length;
+  const m = (nNodes-1) + vsrcs.length + digiRows.length + t555s.length;
   if(m<=0) return null;
   const A = Array.from({length:m},()=>new Array(m).fill(0));
   const b = new Array(m).fill(0);
@@ -331,6 +337,15 @@ function assembleSolve(){
   digiRows.forEach((d,k)=>{
     const r=nNodes-1+vsrcs.length+k;
     A[r][d.nd-1]+=1; A[d.nd-1][r]+=1; b[r]=d.val;
+  });
+  /* 555 输出：以 GND 脚为参考的电压源行，0 或 VCC */
+  t555s.forEach((c,k)=>{
+    const r=nNodes-1+vsrcs.length+digiRows.length+k;
+    const ps=nOf(c), nO=ps[4], nG=ps[5];
+    if(nO>0){ A[r][nO-1]+=1; A[nO-1][r]+=1; }
+    if(nG>0){ A[r][nG-1]-=1; A[nG-1][r]-=1; }
+    b[r]=c._q?(c._vcc||0):0;
+    c._orow=r;
   });
   for(const c of comps){
     const [a,bn]=nOf(c);
@@ -359,6 +374,10 @@ function assembleSolve(){
     else if(c.type==='NPN'||c.type==='PNP') stampBJT(A,b,gS,iS,c,nOf(c));
     else if(c.type==='NMOS'||c.type==='PMOS') stampMOS(A,b,gS,c,nOf(c));
     else if(c.type==='OPAMP') stampOPAMP(A,b,gS,c,nOf(c));
+    else if(c.type==='T555'){
+      const ps5=nOf(c);
+      gS(ps5[2],ps5[5], c._dis?100:1e-9);   // 放电管：导通≈10Ω，关断≈开路
+    }
   }
   for(let n=1;n<nNodes;n++) A[n-1][n-1]+=1e-8;   // 浮空泄放
   const x = solve(A,b);
@@ -377,8 +396,24 @@ function solve(A,b){
   for(let r=n-1;r>=0;r--){ let s=b[r]; for(let k=r+1;k<n;k++) s-=A[r][k]*x[k]; x[r]=s/A[r][r]; }
   return x;
 }
+/* 555 定时器：比较器 + RS 锁存（用上一步的解算结果判断，步进式离散状态机） */
+function t555Step(){
+  for(const c of comps){
+    if(c.type!=='T555') continue;
+    const ps=nOf(c);
+    const V=nd=>nd>0?(nodeV[nd-1]||0):0;
+    const vcc=V(ps[3])-V(ps[5]);
+    c._vcc=Math.max(0,vcc);
+    if(vcc<0.5){ c._q=0; c._dis=true; continue; }   // 未上电：输出低、放电管导通
+    const trig=V(ps[0])-V(ps[5]), thr=V(ps[1])-V(ps[5]);
+    if(thr>2*vcc/3) c._q=0;                         // 阈值脚 → 复位（优先）
+    else if(trig<vcc/3) c._q=1;                     // 触发脚 → 置位
+    c._dis=(c._q===0);                              // 输出低 → 放电管导通
+  }
+}
 function stepOnce(){
   digiStep();
+  t555Step();
   const hasNL = comps.some(c=>NL_SET.has(c.type));
   let x=null, iter=0, conv=!hasNL;
   while(!conv && iter<120){
@@ -431,6 +466,10 @@ function stepOnce(){
   comps.filter(c=>c.type==='V'||c.type==='VAC').forEach(c=>{
     const i=x[c._row]||0; c.cur=i; const [a,bn]=nOf(c); addCur(a,i); addCur(bn,i);
   });
+  comps.filter(c=>c.type==='T555').forEach(c=>{
+    const i=x[c._orow]||0; c.cur=i;
+    const ps5=nOf(c); addCur(ps5[4],i); addCur(ps5[5],i);
+  });
   for(const c of comps){
     const [a,bn]=nOf(c);
     const v=(a>0?x[a-1]:0)-(bn>0?x[bn-1]:0);
@@ -447,9 +486,11 @@ function stepOnce(){
     else if(c.type==='NPN'||c.type==='PNP') c.cur=c._ic||0;
     else if(c.type==='NMOS'||c.type==='PMOS') c.cur=c._id||0;
     else if(c.type==='OPAMP') c.cur=c._io||0;
+    else if(c.type==='T555') c.cur=x[c._orow]||0;
     if(c.type==='NPN'||c.type==='PNP'||c.type==='NMOS'||c.type==='PMOS'){
       const ps=nOf(c); addCur(ps[1],c.cur); addCur(ps[2],c.cur);
-    } else if(c.type!=='GND'){ addCur(a,c.cur); addCur(bn,c.cur); }
+    } else if(c.type==='T555'){ /* OUT/GND 电流已在上面计入 */ }
+    else if(c.type!=='GND'){ addCur(a,c.cur); addCur(bn,c.cur); }
   }
   for(const c of comps){          // 采样数字输入，供下一步 digiStep
     if(INIDX[c.type]){
@@ -464,6 +505,7 @@ function compV(c){
   const ps=nOf(c);
   const V=nd=>nd>0?(nodeV[nd-1]||0):0;
   if(c.type==='OPAMP') return V(ps[2]);                        // 输出电压
+  if(c.type==='T555') return V(ps[4])-V(ps[5]);                 // 输出对 GND 脚
   if(c.type==='NPN'||c.type==='NMOS') return V(ps[1])-V(ps[2]); // Vce / Vds
   if(c.type==='PNP'||c.type==='PMOS') return V(ps[1])-V(ps[2]); // Vec / Vsd（取正）
   return V(ps[0])-(ps.length>1?V(ps[1]):0);
@@ -516,6 +558,8 @@ function drawComp(c){
     ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,8); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-12,8); ctx.lineTo(12,8); ctx.moveTo(-8,13); ctx.lineTo(8,13); ctx.moveTo(-4,18); ctx.lineTo(4,18); ctx.stroke();
     ctx.fillStyle='#5c6672'; ctx.fillText('GND',0,32);
+  } else if(c.type==='T555'){
+    draw555(c);
   } else if(DIGI_SET.has(c.type)){
     drawDigi(c);
   } else if(ADV_SET.has(c.type)){
@@ -652,6 +696,33 @@ function drawAdv(c){
   }
   for(const p of pinsOf(c)){ ctx.beginPath(); ctx.arc(p.x-c.x,p.y-c.y,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
 }
+/* M6-2：555 定时器（行为级 DIP 符号） */
+function draw555(c){
+  ctx.lineWidth=2; ctx.strokeStyle='#33404f'; ctx.fillStyle='#33404f';
+  rr(-38,-55,76,110,8);
+  ctx.font='bold 13px sans-serif'; ctx.fillText('555',0,-36);
+  ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672';
+  ctx.textAlign='left';
+  ctx.fillText('TRIG',-34,-26); ctx.fillText('THR',-34,4); ctx.fillText('DIS',-34,34);
+  ctx.textAlign='right';
+  ctx.fillText('VCC',34,-26); ctx.fillText('OUT',34,4); ctx.fillText('GND',34,34);
+  ctx.textAlign='center';
+  ctx.beginPath(); ctx.arc(0,-6,9,0,7);                 // 输出状态灯
+  ctx.fillStyle=c._q?'#1a9e54':'#8a93a3'; ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif'; ctx.fillText(c._q?'1':'0',0,-2);
+  ctx.strokeStyle='#33404f'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(-38,-30); ctx.lineTo(-50,-30);
+  ctx.moveTo(-38,0);   ctx.lineTo(-50,0);
+  ctx.moveTo(-38,30);  ctx.lineTo(-50,30);
+  ctx.moveTo(38,-30);  ctx.lineTo(50,-30);
+  ctx.moveTo(38,0);    ctx.lineTo(50,0);
+  ctx.moveTo(38,30);   ctx.lineTo(50,30);
+  ctx.stroke();
+  ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672';
+  ctx.fillText(`${compV(c).toFixed(2)}V`,0,-64);
+  for(const p of pinsOf(c)){ ctx.beginPath(); ctx.arc(p.x-c.x,p.y-c.y,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
+}
 const fmtR=v=>v>=1e6?v/1e6+'MΩ':v>=1e3?(v/1e3).toFixed(v%1e3?1:0)+'kΩ':Math.round(v)+'Ω';
 const fmtF=v=>v<1e-6?(v*1e9).toFixed(0)+'nF':v<1e-3?(v*1e6).toFixed(0)+'µF':v+'F';
 const fmtH=v=>v<1?(v*1e3).toFixed(0)+'mH':v+'H';
@@ -705,7 +776,7 @@ const cvEl=cv;
 function evPos(e){ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
 const snap=p=>({x:Math.round(p.x/GRID)*GRID,y:Math.round(p.y/GRID)*GRID});
 const DIMS={AND:{w:48,h:26},OR:{w:48,h:26},XOR:{w:48,h:26},NOT:{w:48,h:22},TFF:{w:46,h:30},CLK:{w:24,h:24},IN:{w:24,h:24},PROBE:{w:18,h:20},SEG7:{w:56,h:44},
-  NPN:{w:30,h:34},PNP:{w:30,h:34},NMOS:{w:28,h:34},PMOS:{w:28,h:34},OPAMP:{w:36,h:32}};
+  NPN:{w:30,h:34},PNP:{w:30,h:34},NMOS:{w:28,h:34},PMOS:{w:28,h:34},OPAMP:{w:36,h:32},T555:{w:40,h:56}};
 const hitComp=p=>comps.find(c=>{const d=DIMS[c.type]||{w:28,h:28}; return Math.abs(p.x-c.x)<d.w&&Math.abs(p.y-c.y)<d.h;});
 function hitPin(p){ for(const c of comps) for(const pin of pinsOf(c)) if(Math.hypot(pin.x-p.x,pin.y-p.y)<9) return pin; return null; }
 function hitWire(p){
@@ -797,6 +868,9 @@ function showProps(){
     <div class="row"><label>跨导系数 k（A/V²）</label><input id="pkk" type="number" step="any" value="${c.k}"></div>`;
   if(c.type==='OPAMP') h+=`<div class="row"><label>开环增益 A</label><input id="pga" type="number" step="any" value="${c.gain}"></div>
     <div class="row"><label>输出饱和电压（V）</label><input id="pvs" type="number" step="any" value="${c.vsat}"></div>`;
+  if(c.type==='T555') h+=`<div class="row"><label>输出</label><div>${c._q?'高电平':'低电平'} · 放电管${c._dis?'导通':'关断'}</div></div>
+    <div class="row"><label>供电 VCC</label><div>${(c._vcc||0).toFixed(2)} V（由 VCC/GND 引脚决定）</div></div>
+    <div class="row"><label>比较阈值</label><div style="font-size:11px;color:var(--muted)">TRIG &lt; ⅓VCC 置位<br>THR &gt; ⅔VCC 复位（优先）</div></div>`;
   h+=`<div class="row"><label>实时</label><div id="rt" style="font-variant-numeric:tabular-nums">-</div></div>`;
   h+=`<button class="dbtn" id="delB">删除元件</button>`;
   box.innerHTML=h;
@@ -958,6 +1032,7 @@ const PAL=[
   ['NMOS','M-9 0 h5 M-4 -9 v18 M-3 -6 h2 M-3 0 h2 M-3 6 h2 M-1 -6 l9 -6 M-1 6 l9 6'],
   ['PMOS','M-9 0 h5 M-4 -9 v18 M-3 -6 h2 M-3 0 h2 M-3 6 h2 M-1 -6 l9 -6 M-1 6 l9 6'],
   ['OPAMP','M-9 -10 l18 10 l-18 10 z'],
+  ['T555','M-13 -9 h26 v18 h-26 z M-8 -4 h8 M-8 1 h12 M-8 6 h6'],
 ];
 const palBox=document.getElementById('palette');
 for(const [t,d] of PAL){
@@ -1104,6 +1179,44 @@ function demoOp(){
   setStatus('运放同相放大 ×2：通道1=输出，通道2=输入 0.5V/100Hz');
 }
 document.getElementById('demoOpBtn').onclick=demoOp;
+
+/* ================= 演示：555 无稳态多谐振荡（LED 闪烁） ================= */
+function demo555(){
+  pushUndo();
+  comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
+  const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
+  const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
+
+  C('V',760,180,1).val=9;              // 9V 供电（纵向）
+  C('R',260,170,1).val=10000;          // R1：VCC → DIS（纵向）
+  C('R',380,370,1).val=47000;          // R2：DIS → 定时节点（纵向）
+  C('C',380,450,1).val=1e-5;           // C = 10µF：定时节点 → 地（纵向）
+  const t5=C('T555',450,300);          // 555 本体
+  C('R',560,300).val=330;              // 输出限流
+  const led=C('LED',640,300);          // 输出指示 LED
+  C('GND',500,500);
+
+  W(260,100,500,100); W(500,100,760,100);      // 顶部电源轨
+  W(760,100,760,140);                          // → 电源正极
+  W(260,100,260,130);                          // → R1 上端
+  W(500,270,500,100);                          // → 555 VCC 脚
+  W(260,210,260,330);                          // R1 下端 → DIS 节点
+  W(260,330,380,330); W(380,330,400,330);      // DIS 节点 → DIS 引脚（380 处接 R2 上端）
+  W(400,270,230,270); W(400,300,230,300);      // TRIG / THR → 左侧定时节点
+  W(230,270,230,300);                          // 两脚短接（无稳态接法）
+  W(230,300,230,410); W(230,410,380,410);      // 定时节点 → R2 下端 / C 上端
+  W(380,490,380,500);                          // C 下端 → 地
+  W(500,300,520,300);                          // OUT → 限流电阻
+  W(600,300,640,300);                          // 限流电阻 → LED
+  W(680,300,680,500);                          // LED → 地
+  W(500,330,500,500);                          // 555 GND 脚 → 地
+  W(380,500,500,500); W(500,500,680,500); W(680,500,760,500);
+  W(760,220,760,500);                          // 电源负极 → 地
+
+  selComps=[t5,led];
+  setStatus('555 无稳态：R1=10k R2=47k C=10µF → f≈1.39Hz，通道1=输出，通道2=LED');
+}
+document.getElementById('demo555Btn').onclick=demo555;
 
 /* 启动：优先恢复本机保存的电路，否则加载共射放大演示 */
 try{
