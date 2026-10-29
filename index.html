@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="M5 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器，非线性牛顿迭代引擎，四通道示波器，电流动画，桥式整流/共射放大/MOS 开关/运放放大四套预置演示。">
+<title>M5 · 电路实验室</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
+<style>
+:root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:#17202a;overflow:hidden;}
+#topbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border-bottom:1px solid var(--rule);}
+#topbar b{font-size:15px;}
+.tbtn{padding:6px 12px;border:1px solid var(--rule);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;}
+.tbtn:hover{border-color:var(--blue);color:var(--blue);}
+.tbtn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+#status{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+#main{display:grid;grid-template-columns:132px 1fr 250px;grid-template-rows:1fr 140px;height:calc(100vh - 45px);}
+#palette{background:#fff;border-right:1px solid var(--rule);padding:10px 8px;overflow-y:auto;grid-row:1/2;}
+#palette h4{font-size:11px;color:var(--muted);letter-spacing:1px;margin:6px 4px 8px;}
+.pal{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:1.5px solid transparent;border-radius:9px;cursor:pointer;font-size:11px;color:var(--muted);}
+.pal:hover{border-color:var(--blue);color:var(--ink);background:#f5f8ff;}
+.pal svg{display:block;}
+#cvWrap{position:relative;overflow:hidden;grid-row:1/2;}
+#cv{display:block;width:100%;height:100%;cursor:crosshair;}
+#props{background:#fff;border-left:1px solid var(--rule);padding:14px;overflow-y:auto;grid-row:1/3;font-size:13px;}
+#props h4{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;}
+#props .row{margin-bottom:10px;}
+#props label{font-size:12px;color:var(--muted);display:block;margin-bottom:3px;}
+#props input,#props select{width:100%;padding:6px 8px;border:1px solid var(--rule);border-radius:7px;font-size:13px;}
+.dbtn{width:100%;padding:8px;border:none;border-radius:8px;background:#fee;color:#c33;cursor:pointer;margin-top:6px;}
+.dbtn:hover{background:#fdd;}
+.kbd{background:#eef1f8;border-radius:5px;padding:1px 6px;font-size:11px;}
+.help{margin-top:14px;font-size:11px;color:var(--muted);line-height:2;}
+#scopeWrap{grid-column:1/3;background:#0f1420;border-top:1px solid var(--rule);position:relative;}
+#scope{display:block;width:100%;height:100%;}
+#scopeTitle{position:absolute;top:6px;left:12px;font-size:11px;color:#8fa3c8;}
+#scopeCh{position:absolute;top:6px;right:12px;font-size:11px;}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M5</span></b>
+  <button class="tbtn on" id="runBtn">⏸ 暂停</button>
+  <button class="tbtn" id="demoBtn">🌉 桥式整流</button>
+  <button class="tbtn" id="demoCntBtn">🔢 4位计数器</button>
+  <button class="tbtn" id="demoAmpBtn">🔺 共射放大</button>
+  <button class="tbtn" id="demoMosBtn">⚡ MOS 开关</button>
+  <button class="tbtn" id="demoOpBtn">🎚 运放放大</button>
+  <button class="tbtn" id="clearBtn">🗑 清空</button>
+  <span style="font-size:12px;color:var(--muted)">速度</span>
+  <select id="speed" style="padding:5px;border:1px solid var(--rule);border-radius:7px;">
+    <option value="1">×1</option><option value="4" selected>×4</option><option value="16">×16</option>
+  </select>
+  <span id="status">就绪</span>
+</div>
+<div id="main">
+  <div id="palette"><h4>元件库</h4></div>
+  <div id="cvWrap"><canvas id="cv"></canvas></div>
+  <div id="props"><h4>属性</h4><div id="propsBody"><p style="color:var(--muted);font-size:12px">点击画布中的元件查看/修改参数</p></div>
+    <div class="help">
+      · 左侧点元件 → 画布点击放置（Shift 连续放）<br>
+      · <span class="kbd">R</span> 旋转 · <span class="kbd">Del</span> 删除 · <span class="kbd">Esc</span> 取消<br>
+      · 点引脚起线，再点另一引脚收线<br>
+      · 双击开关切换通/断<br>
+      · 单击选中元件进示波器；<span class="kbd">Shift+点击</span> 追加通道（最多 4 路）<br>
+      · 黄点 = 电流方向与大小
+    </div>
+  </div>
+  <div id="scopeWrap"><canvas id="scope"></canvas><div id="scopeTitle">示波器：未选中元件</div><div id="scopeCh"></div></div>
+</div>
+
+<script>
+'use strict';
+/* ================= 数据模型 ================= */
+const GRID = 10;
+let comps = [], wires = [], nid = 1;
+let selComps = [];              // 示波器通道（最多 4）
+let propsTarget = null;
+let placing = null, placingRot = 0, wireFrom = null;
+let mouse = {x:0,y:0}, running = true, speed = 4, topoDirty = true;
+let simTime = 0, animT = 0, nodeV = [], nodeCur = new Map();
+
+const DEF = {
+  V:  {name:'直流电源', unit:'V'},
+  VAC:{name:'交流/方波源'},
+  R:  {name:'电阻',     unit:'Ω'},
+  POT:{name:'电位器',   unit:'Ω'},
+  C:  {name:'电容',     unit:'F'},
+  L:  {name:'电感',     unit:'H'},
+  D:  {name:'二极管'},
+  LED:{name:'LED'},
+  SW: {name:'开关'},
+  GND:{name:'接地'},
+  AND:{name:'与门'}, OR:{name:'或门'}, XOR:{name:'异或门'}, NOT:{name:'非门'},
+  TFF:{name:'T触发器'}, CLK:{name:'时钟'}, IN:{name:'逻辑输入'},
+  PROBE:{name:'逻辑探针'}, SEG7:{name:'数码管(BCD)'},
+  NPN:{name:'NPN 三极管'}, PNP:{name:'PNP 三极管'},
+  NMOS:{name:'N-MOSFET'}, PMOS:{name:'P-MOSFET'},
+  OPAMP:{name:'运算放大器'},
+};
+/* 非线性器件：参与牛顿迭代 */
+const NL_SET=new Set(['D','LED','NPN','PNP','NMOS','PMOS','OPAMP']);
+const ADV_SET=new Set(['NPN','PNP','NMOS','PMOS','OPAMP']);
+function mkComp(type,x,y,rot=0){
+  const c = {id:nid++, type, x, y, rot, vp:0, ip:0, cur:0, closed:true};
+  if(type==='V') c.val=5;
+  if(type==='VAC'){ c.wave='sine'; c.amp=10; c.freq=50; c.offset=0; }
+  if(type==='R') c.val=1000;
+  if(type==='POT'){ c.rmax=10000; c.ratio=50; }
+  if(type==='C') c.val=1e-4;
+  if(type==='L') c.val=1e-2;
+  if(type==='CLK') c.freq=2;
+  if(type==='IN'||type==='TFF') c.on=false;
+  if(type==='NPN'||type==='PNP'){ c.beta=100; c.sat=1e-15; c._vbe=0; }
+  if(type==='NMOS'||type==='PMOS'){ c.k=2e-3; c.vth=2; c._vgs=0; c._vds=0; }
+  if(type==='OPAMP'){ c.gain=1e5; c.vsat=12; c.ro=10; c._vd=0; }
+  return c;
+}
+/* 三端器件的本地方位 → 世界坐标（rot=1 时整体旋转 90°） */
+function rotPts(c, pts){
+  if(!c.rot) return pts.map(([lx,ly])=>({x:c.x+lx, y:c.y+ly}));
+  return pts.map(([lx,ly])=>({x:c.x-ly, y:c.y+lx}));
+}
+function pinsOf(c){
+  if(c.type==='GND') return [{x:c.x,y:c.y}];
+  switch(c.type){
+    case 'AND': case 'OR': case 'XOR':
+      return [{x:c.x-40,y:c.y-15},{x:c.x-40,y:c.y+15},{x:c.x+40,y:c.y}];
+    case 'NOT':
+      return [{x:c.x-40,y:c.y},{x:c.x+40,y:c.y}];
+    case 'TFF':
+      return [{x:c.x-40,y:c.y},{x:c.x+40,y:c.y-15},{x:c.x+40,y:c.y+15}]; // CLK,Q,Q̄
+    case 'CLK': case 'IN':
+      return [{x:c.x,y:c.y+20}];
+    case 'PROBE':
+      return [{x:c.x,y:c.y+15}];
+    case 'SEG7':
+      return [{x:c.x-45,y:c.y-22},{x:c.x-45,y:c.y-7},{x:c.x-45,y:c.y+8},{x:c.x-45,y:c.y+23}]; // A,B,C,D
+    case 'NPN': case 'PNP': case 'NMOS': case 'PMOS':
+      return rotPts(c, [[-40,0],[0,-40],[0,40]]);      // B/G, C/D, E/S
+    case 'OPAMP':
+      return rotPts(c, [[-40,-15],[-40,15],[40,0]]);   // IN−, IN+, OUT
+    default:
+      return c.rot ? [{x:c.x,y:c.y-40},{x:c.x,y:c.y+40}]
+                   : [{x:c.x-40,y:c.y},{x:c.x+40,y:c.y}];
+  }
+}
+/* 数字件：输出/输入引脚索引 + 上一步采样驱动（1 步传播延迟） */
+const OUTIDX={AND:[2],OR:[2],XOR:[2],NOT:[1],TFF:[1,2],CLK:[0],IN:[0]};
+const INIDX={AND:[0,1],OR:[0,1],XOR:[0,1],NOT:[0],TFF:[0],PROBE:[0],SEG7:[0,1,2,3]};
+function digiStep(){
+  const VTH=2.5;
+  for(const c of comps){
+    const ins=c._ins||[], hi=i=>(ins[i]||0)>VTH;
+    if(c.type==='AND') c._out=[hi(0)&&hi(1)?5:0];
+    else if(c.type==='OR') c._out=[hi(0)||hi(1)?5:0];
+    else if(c.type==='XOR') c._out=[(hi(0)!==hi(1))?5:0];
+    else if(c.type==='NOT') c._out=[hi(0)?0:5];
+    else if(c.type==='CLK') c._out=[((simTime*c.freq)%1)<0.5?5:0];
+    else if(c.type==='IN') c._out=[c.on?5:0];
+    else if(c.type==='TFF'){
+      const clk=hi(0);
+      if(clk&&!c._clkPrev) c.on=!c.on;
+      c._clkPrev=clk;
+      c._out=[c.on?5:0,c.on?0:5];
+    }
+  }
+}
+const keyOf = p => Math.round(p.x/GRID)+','+Math.round(p.y/GRID);
+
+/* ================= 节点并查集 ================= */
+let nodeOf = new Map(), nNodes = 1;
+function buildNodes(){
+  const parent = new Map();
+  const find = k => { let r=k; while(parent.get(r)!==r) r=parent.get(r); return r; };
+  const union = (a,b) => { const ra=find(a),rb=find(b); if(ra!==rb) parent.set(ra,rb); };
+  const keys = [];
+  const reg = p => { const k=keyOf(p); if(!parent.has(k)){parent.set(k,k); keys.push(k);} return k; };
+  for(const c of comps) for(const p of pinsOf(c)) reg(p);
+  for(const w of wires){ const ka=reg(w.a), kb=reg(w.b); union(ka,kb); }
+  const gndKeys = comps.filter(c=>c.type==='GND').flatMap(c=>pinsOf(c)).map(keyOf).filter(k=>parent.has(k));
+  const g0 = gndKeys.length ? find(gndKeys[0]) : null;
+  for(const k of gndKeys) union(g0,k);
+  nodeOf = new Map(); nNodes = 1;
+  for(const k of keys){
+    const r = find(k);
+    if(r===g0){ nodeOf.set(k,0); continue; }
+    if(!nodeOf.has(r)) nodeOf.set(r,nNodes++);
+    nodeOf.set(k,nodeOf.get(r));
+  }
+}
+const nodeAt = p => nodeOf.get(keyOf(p)) ?? 0;
+const nOf = c => pinsOf(c).map(nodeAt);
+
+/* ================= MNA 引擎（M1 内核 + 非线性迭代） ================= */
+const DT = 1e-4, VT = 25.85e-3;
+const srcVal = c => {
+  if(c.type==='V') return c.val;
+  const ph = 2*Math.PI*c.freq*simTime;
+  const base = c.wave==='sine' ? Math.sin(ph) : (Math.sin(ph)>=0?1:-1);
+  return c.offset + c.amp*base;
+};
+function diodeLin(c, vd){          // Shockley 线性化（带限幅）
+  const Is = c.type==='LED' ? 1e-35 : 1e-14;
+  const Rs = c.type==='LED' ? 5 : 0.1;
+  vd = Math.max(-5, Math.min( c.type==='LED'?3.5:1.5, vd));
+  if(c._vg!==undefined && Math.abs(vd-c._vg)>0.5) vd = c._vg + 0.5*Math.sign(vd-c._vg);
+  const ev = Math.exp(Math.min(40, vd/VT));
+  const id = c.Is_ = (c._Is = Is);
+  const Geq = Is/VT*ev + 1e-9;
+  const Ieq = Is*(ev-1) - Geq*vd;
+  return {Geq, Ieq, Rs, vd};
+}
+/* LED：平滑指数模型 I = gmax·a·ln(1+e^((Vd-Vf)/a))
+   单调、处处可导，大电流时退化为 (Vd-Vf)/Rs，反向自动截止，牛顿迭代稳定
+   返回牛顿线性化参数 I ≈ G·vd + I0 */
+const LED_VF = 1.88, LED_RS = 5, LED_TA = 0.08;
+function ledModel(vd){
+  const gmax = 1/LED_RS, a = LED_TA, x = (vd - LED_VF)/a;
+  let G, I;
+  if(x > 30){ G = gmax;  I = gmax*(vd-LED_VF); }       // 深度导通：线性外推
+  else if(x < -30){ G = 1e-9; I = 1e-9*vd; }           // 深度截止
+  else { const e = Math.exp(x); G = gmax*e/(1+e); I = gmax*a*Math.log1p(e); }
+  return {G, I, I0:I-G*vd};                            // I0 = 电流源偏置
+}
+
+/* 受控电流源：I = gm*(V(c1)-V(c2)) + I0，从 nOut 流向 nRef */
+function stampVCCS(A,b,nOut,nRef,c1,c2,gm,I0){
+  if(nOut>0&&c1>0)A[nOut-1][c1-1]+=gm;
+  if(nOut>0&&c2>0)A[nOut-1][c2-1]-=gm;
+  if(nRef>0&&c1>0)A[nRef-1][c1-1]-=gm;
+  if(nRef>0&&c2>0)A[nRef-1][c2-1]+=gm;
+  if(nOut>0)b[nOut-1]-=I0;
+  if(nRef>0)b[nRef-1]+=I0;
+}
+/* BJT：Ebers-Moll 简化式（正向放大区），基极电流 = Ic/β，牛顿线性化
+   PNP 视为"取反的 NPN"：虚拟发射极=ps[1]、虚拟集电极=ps[2]，电流源偏置取反 */
+function stampBJT(A,b,gS,iS,c,ps){
+  const npn=c.type==='NPN', pol=npn?1:-1;
+  const nb=ps[0], nC=npn?ps[1]:ps[2], nE=npn?ps[2]:ps[1];
+  const beta=Math.max(10,c.beta||100), Is=c.sat||1e-15;
+  const vbe=Math.max(0,c._vbe||0);             // 已按极性折算的正向结电压
+  const ev=Math.exp(Math.min(40,vbe/VT));
+  const ic=Is*(ev-1);                          // 集电极电流（极性已折算）
+  const gm=Math.max(Is/VT*ev,1e-12);           // dIc/dVbe
+  const ieq=ic-gm*vbe;
+  const gbe=gm/beta+1e-9;                      // 基极-发射极导通
+  const ibeq=ic/beta-gbe*vbe;
+  stampVCCS(A,b,nC,nE,nb,nE,gm,pol*ieq);       // 集电极电流受 Vbe 控制
+  gS(nb,nE,gbe); iS(nb,nE,pol*ibeq);           // 基极电流通路
+  gS(nb,nC,1e-9);                              // 基极-集电极泄漏（防浮空）
+  c._ic=ic; c._gm=gm;
+}
+/* MOSFET：平滑饱和模型 I = k·Vds·Vov²/(Vov+2Vds)
+   小 Vds 时退化为线性区 k·Vov·Vds，大 Vds 时渐近饱和 k·Vov²/2，无区域切换跳变 */
+function stampMOS(A,b,gS,c,ps){
+  const nmos=c.type==='NMOS', pol=nmos?1:-1;
+  const ng=ps[0], nD=nmos?ps[1]:ps[2], nS=nmos?ps[2]:ps[1];
+  const k=c.k||2e-3, vth=Math.max(0.1,Math.abs(c.vth||2));
+  const vgs=c._vgs||0, vds=c._vds||0;
+  const vov=vgs-vth;
+  let id,gm,gds;
+  if(vov<=0){                                  // 截止
+    id=1e-9*vds; gm=0; gds=1e-9;
+  } else {
+    const den=vov+2*vds;
+    const dn=Math.abs(den)<1e-9?(den<0?-1e-9:1e-9):den;
+    id=k*vds*vov*vov/dn;
+    gds=k*vov*vov*vov/(dn*dn);                 // ∂I/∂Vds
+    gm=k*vds*vov*(vov+4*vds)/(dn*dn);          // ∂I/∂Vov
+    if(!isFinite(id)||!isFinite(gm)||!isFinite(gds)){ id=0; gm=0; gds=1e-9; }
+    gds=Math.min(1,gds);
+  }
+  const ieq=id-gm*vgs-gds*vds;
+  stampVCCS(A,b,nD,nS,ng,nS,gm,pol*ieq);       // 漏极电流受 Vgs 控制（PMOS 偏置取反）
+  gS(nD,nS,gds);                               // 输出电导
+  gS(ng,nS,1e-9);                              // 栅极泄漏（防浮空）
+  c._id=id;
+}
+/* 运放：有限增益 + tanh 软饱和 + 输出电阻，等价于非线性 VCVS */
+function stampOPAMP(A,b,gS,c,ps){
+  const nP=ps[1], nN=ps[0], nO=ps[2];
+  const g=1/Math.max(1,c.ro||10), Av=c.gain||1e5, Vsat=Math.max(0.5,c.vsat||12);
+  const vd=c._vd||0;
+  const s=Math.max(-20,Math.min(20,Av*vd/Vsat));
+  const th=Math.tanh(s);
+  const eff=Vsat*th;                          // 饱和后的输出电压
+  const dEff=Av*(1-th*th);                    // dVout/dVd
+  if(nO>0){
+    A[nO-1][nO-1]+=g;
+    if(nP>0)A[nO-1][nP-1]-=g*dEff;
+    if(nN>0)A[nO-1][nN-1]+=g*dEff;
+    b[nO-1]+=g*(eff-dEff*vd);
+    c._io=(nodeV[nO-1]||0)*g-g*eff;           // 输出电流（近似，用于显示）
+  }
+  gS(nP,0,1e-9); gS(nN,0,1e-9);               // 输入对地泄漏（防浮空）
+}
+function assembleSolve(){
+  const vsrcs = comps.filter(c=>c.type==='V'||c.type==='VAC');
+  const digiRows=[];
+  for(const c of comps){
+    if(!c._out||!OUTIDX[c.type]) continue;
+    const ps=nOf(c);
+    OUTIDX[c.type].forEach((pi,k)=>{ if(ps[pi]>0) digiRows.push({nd:ps[pi], val:c._out[k]}); });
+  }
+  const m = (nNodes-1) + vsrcs.length + digiRows.length;
+  if(m<=0) return null;
+  const A = Array.from({length:m},()=>new Array(m).fill(0));
+  const b = new Array(m).fill(0);
+  const gS = (a,bn,g)=>{ if(a>0)A[a-1][a-1]+=g; if(bn>0)A[bn-1][bn-1]+=g; if(a>0&&bn>0){A[a-1][bn-1]-=g;A[bn-1][a-1]-=g;} };
+  const iS = (a,bn,i)=>{ if(a>0)b[a-1]-=i; if(bn>0)b[bn-1]+=i; };
+  vsrcs.forEach((c,k)=>{
+    const [a,bn]=nOf(c), r=nNodes-1+k;
+    if(a>0){A[r][a-1]+=1;A[a-1][r]+=1;}
+    if(bn>0){A[r][bn-1]-=1;A[bn-1][r]-=1;}
+    b[r]=srcVal(c); c._row=r;
+  });
+  digiRows.forEach((d,k)=>{
+    const r=nNodes-1+vsrcs.length+k;
+    A[r][d.nd-1]+=1; A[d.nd-1][r]+=1; b[r]=d.val;
+  });
+  for(const c of comps){
+    const [a,bn]=nOf(c);
+    if(c.type==='R') gS(a,bn,1/c.val);
+    else if(c.type==='POT'){ const r=Math.max(10, c.rmax*c.ratio/100); gS(a,bn,1/r); c._r=r; }
+    else if(c.type==='SW') gS(a,bn,c.closed?100:1e-9);
+    else if(c.type==='C'){
+      const G=2*c.val/DT, I=-G*c.vp-c.ip;
+      gS(a,bn,G); iS(a,bn,I); c._G=G; c._I=I;
+    }
+    else if(c.type==='L'){
+      const G=DT/(2*c.val), I=c.ip+G*c.vp;
+      gS(a,bn,G); iS(a,bn,I); c._G=G; c._I=I;
+    }
+    else if(c.type==='D'){
+      const {Geq,Ieq,Rs} = diodeLin(c, c._vg ?? c.vp);
+      gS(a,bn,Geq/(1+Geq*Rs));           // 诺顿串联 Rs 折算
+      iS(a,bn,Ieq/(1+Geq*Rs));
+      c._G=Geq; c._I=Ieq; c._Rs=Rs;
+    }
+    else if(c.type==='LED'){
+      const {G,I,I0} = ledModel(c._vg ?? c.vp);   // 平滑 LED 模型（Vf + Rs）
+      gS(a,bn,G); iS(a,bn,I0);
+      c._G=G; c._I=I0; c._Iraw=I;
+    }
+    else if(c.type==='NPN'||c.type==='PNP') stampBJT(A,b,gS,iS,c,nOf(c));
+    else if(c.type==='NMOS'||c.type==='PMOS') stampMOS(A,b,gS,c,nOf(c));
+    else if(c.type==='OPAMP') stampOPAMP(A,b,gS,c,nOf(c));
+  }
+  for(let n=1;n<nNodes;n++) A[n-1][n-1]+=1e-8;   // 浮空泄放
+  const x = solve(A,b);
+  return x;
+}
+function solve(A,b){
+  const n=A.length;
+  for(let c=0;c<n;c++){
+    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[p][c])) p=r;
+    if(p!==c){[A[p],A[c]]=[A[c],A[p]];[b[p],b[c]]=[b[c],b[p]];}
+    const piv=A[c][c]; if(Math.abs(piv)<1e-12) return null;
+    for(let r=c+1;r<n;r++){ const f=A[r][c]/piv; if(!f)continue;
+      for(let k=c;k<n;k++) A[r][k]-=f*A[c][k]; b[r]-=f*b[c]; }
+  }
+  const x=new Array(n).fill(0);
+  for(let r=n-1;r>=0;r--){ let s=b[r]; for(let k=r+1;k<n;k++) s-=A[r][k]*x[k]; x[r]=s/A[r][r]; }
+  return x;
+}
+function stepOnce(){
+  digiStep();
+  const hasNL = comps.some(c=>NL_SET.has(c.type));
+  let x=null, iter=0, conv=!hasNL;
+  while(!conv && iter<120){
+    x = assembleSolve();
+    if(!x) return;
+    conv = true;
+    const V=(nd)=>nd>0?(x[nd-1]||0):0;
+    for(const c of comps){
+      if(!NL_SET.has(c.type)) continue;
+      const ps=nOf(c);
+      if(c.type==='D'||c.type==='LED'){
+        const vN=V(ps[0])-V(ps[1]);
+        let prev=c._vg ?? c.vp ?? 0;
+        let nv=vN;
+        if(Math.abs(nv-prev)>0.4) nv=prev+0.4*Math.sign(nv-prev);   // 牛顿步长限制
+        if(Math.abs(vN-prev)>1e-4) conv=false;
+        c._vg=nv;
+      } else if(c.type==='NPN'||c.type==='PNP'){
+        const npn=c.type==='NPN';
+        const nE=npn?ps[2]:ps[1];
+        const prev=c._vbe||0;
+        // NPN: Vbe = Vb-Ve；PNP: Veb = Ve-Vb（统一取"正向结电压"）
+        let vbe=npn ? V(ps[0])-V(nE) : V(nE)-V(ps[0]);
+        vbe=Math.max(-0.9,Math.min(0.95,vbe));                  // 结电压限幅
+        if(Math.abs(vbe-prev)>0.15) vbe=prev+0.15*Math.sign(vbe-prev); // 牛顿步长限制
+        if(Math.abs(vbe-prev)>1e-5) conv=false;
+        c._vbe=vbe;
+      } else if(c.type==='NMOS'||c.type==='PMOS'){
+        const nmos=c.type==='NMOS', pol=nmos?1:-1;
+        const nD=nmos?ps[1]:ps[2], nS=nmos?ps[2]:ps[1];
+        const pg=c._vgs||0, pd=c._vds||0;
+        let vgs=Math.max(-1,Math.min(6,pol*(V(ps[0])-V(nS))));
+        let vds=Math.max(-2,Math.min(30,pol*(V(nD)-V(nS))));
+        if(Math.abs(vgs-pg)>0.25) vgs=pg+0.25*Math.sign(vgs-pg);
+        if(Math.abs(vds-pd)>0.5) vds=pd+0.5*Math.sign(vds-pd);
+        if(Math.abs(vgs-pg)>1e-5||Math.abs(vds-pd)>1e-5) conv=false;
+        c._vgs=vgs; c._vds=vds;
+      } else if(c.type==='OPAMP'){
+        const vd=V(ps[1])-V(ps[0]);
+        if(Math.abs(vd-(c._vd||0))>1e-5) conv=false;
+        c._vd=vd;
+      }
+    }
+    iter++;
+  }
+  if(!x){ x=assembleSolve(); if(!x){ setStatus('⚠ 矩阵奇异'); return; } }
+  nodeV=x;
+  nodeCur = new Map();
+  const addCur=(nd,i)=>nodeCur.set(nd,(nodeCur.get(nd)||0)+Math.abs(i));
+  comps.filter(c=>c.type==='V'||c.type==='VAC').forEach(c=>{
+    const i=x[c._row]||0; c.cur=i; const [a,bn]=nOf(c); addCur(a,i); addCur(bn,i);
+  });
+  for(const c of comps){
+    const [a,bn]=nOf(c);
+    const v=(a>0?x[a-1]:0)-(bn>0?x[bn-1]:0);
+    if(c.type==='R') c.cur=v/c.val;
+    else if(c.type==='POT') c.cur=v/c._r;
+    else if(c.type==='SW') c.cur=c.closed?v*100:0;
+    else if(c.type==='C'||c.type==='L'){ c.ip=c._G*v+c._I; c.vp=v; c.cur=c.ip; }
+    else if(c.type==='D'){
+      c.vp=v;
+      const id=(c._Is||1e-14)*(Math.exp(Math.min(40,v/VT))-1);
+      c.cur=id;
+    }
+    else if(c.type==='LED'){ c.vp=v; c.cur=ledModel(v).I; }
+    else if(c.type==='NPN'||c.type==='PNP') c.cur=c._ic||0;
+    else if(c.type==='NMOS'||c.type==='PMOS') c.cur=c._id||0;
+    else if(c.type==='OPAMP') c.cur=c._io||0;
+    if(c.type==='NPN'||c.type==='PNP'||c.type==='NMOS'||c.type==='PMOS'){
+      const ps=nOf(c); addCur(ps[1],c.cur); addCur(ps[2],c.cur);
+    } else if(c.type!=='GND'){ addCur(a,c.cur); addCur(bn,c.cur); }
+  }
+  for(const c of comps){          // 采样数字输入，供下一步 digiStep
+    if(INIDX[c.type]){
+      const ps=nOf(c);
+      c._ins=INIDX[c.type].map(pi=>ps[pi]>0?x[ps[pi]-1]:0);
+    }
+  }
+  simTime+=DT;
+}
+function compV(c){
+  if(c.type==='GND') return 0;
+  const ps=nOf(c);
+  const V=nd=>nd>0?(nodeV[nd-1]||0):0;
+  if(c.type==='OPAMP') return V(ps[2]);                        // 输出电压
+  if(c.type==='NPN'||c.type==='NMOS') return V(ps[1])-V(ps[2]); // Vce / Vds
+  if(c.type==='PNP'||c.type==='PMOS') return V(ps[1])-V(ps[2]); // Vec / Vsd（取正）
+  return V(ps[0])-(ps.length>1?V(ps[1]):0);
+}
+
+/* ================= 渲染 ================= */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+function voltColor(v){
+  const t=Math.max(-1,Math.min(1,v/5));
+  return t>0?`rgba(226,118,45,${0.35+0.65*Math.abs(t)})`:(t<0?`rgba(47,107,255,${0.35+0.65*Math.abs(t)})`:'#94a3b8');
+}
+function draw(){
+  const dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
+  if(cv.width!==Math.round(w*dpr)){cv.width=w*dpr;cv.height=h*dpr;}
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#e8ecf3';
+  for(let gx=GRID;gx<w;gx+=GRID*2)for(let gy=GRID;gy<h;gy+=GRID*2) ctx.fillRect(gx,gy,1.5,1.5);
+  for(const wd of wires){
+    const va=nodeV[nodeAt(wd.a)-1]||0, vb=nodeV[nodeAt(wd.b)-1]||0;
+    ctx.beginPath(); ctx.moveTo(wd.a.x,wd.a.y); ctx.lineTo(wd.b.x,wd.b.y);
+    ctx.lineWidth=2.5; ctx.strokeStyle=voltColor(nodeAt(wd.a)?va:0); ctx.stroke();
+    // 电流动画：黄点，速度∝节点电流，方向高电位→低电位
+    const nc=(nodeCur.get(nodeAt(wd.a))||0)+(nodeCur.get(nodeAt(wd.b))||0);
+    if(running && nc>1e-5){
+      const sp=Math.min(3,Math.sqrt(nc)*300);
+      const dir=va>=vb?1:-1;
+      for(let k=0;k<2;k++){
+        let t=((animT*sp/60 + k/2)%1); if(dir<0) t=1-t;
+        const px=wd.a.x+(wd.b.x-wd.a.x)*t, py=wd.a.y+(wd.b.y-wd.a.y)*t;
+        ctx.beginPath(); ctx.arc(px,py,2.8,0,7); ctx.fillStyle='#f5c518'; ctx.fill();
+      }
+    }
+  }
+  for(const c of comps) drawComp(c);
+  if(placing){ ctx.globalAlpha=.55; drawComp(mkComp(placing,mouse.x,mouse.y)); ctx.globalAlpha=1; }
+  if(wireFrom){
+    ctx.beginPath(); ctx.moveTo(wireFrom.x,wireFrom.y); ctx.lineTo(mouse.x,mouse.y);
+    ctx.setLineDash([6,4]); ctx.strokeStyle='#2f6bff'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(wireFrom.x,wireFrom.y,4,0,7); ctx.fillStyle='#2f6bff'; ctx.fill();
+  }
+}
+function drawComp(c){
+  const sel=selComps.includes(c);
+  ctx.save(); ctx.translate(c.x,c.y); if(c.rot) ctx.rotate(Math.PI/2);
+  if(sel){ ctx.beginPath(); ctx.arc(0,0,30,0,7); ctx.fillStyle='rgba(47,107,255,.12)'; ctx.fill(); }
+  ctx.lineWidth=2; ctx.strokeStyle='#33404f'; ctx.fillStyle='#33404f';
+  ctx.font='10px sans-serif'; ctx.textAlign='center';
+  if(c.type==='GND'){
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-12,8); ctx.lineTo(12,8); ctx.moveTo(-8,13); ctx.lineTo(8,13); ctx.moveTo(-4,18); ctx.lineTo(4,18); ctx.stroke();
+    ctx.fillStyle='#5c6672'; ctx.fillText('GND',0,32);
+  } else if(DIGI_SET.has(c.type)){
+    drawDigi(c);
+  } else if(ADV_SET.has(c.type)){
+    drawAdv(c);
+  } else {
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-24,0); ctx.moveTo(24,0); ctx.lineTo(40,0); ctx.stroke();
+    if(c.type==='R'||c.type==='POT'){
+      ctx.beginPath(); ctx.moveTo(-24,0);
+      [[-20,-7],[-14,7],[-8,-7],[-2,7],[4,-7],[10,7],[16,-7],[22,0],[24,0]].forEach(p=>ctx.lineTo(p[0],p[1]));
+      ctx.stroke();
+      if(c.type==='POT'){ ctx.beginPath(); ctx.moveTo(0,-16); ctx.lineTo(-3,-6); ctx.lineTo(3,-6); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle='#5c6672';
+      ctx.fillText(c.type==='POT'?fmtR(c._r||c.rmax/2):fmtR(c.val),0,-16);
+    } else if(c.type==='C'){
+      ctx.beginPath(); ctx.moveTo(-3,-12); ctx.lineTo(-3,12); ctx.moveTo(3,-12); ctx.lineTo(3,12); ctx.stroke();
+      ctx.fillStyle='#5c6672'; ctx.fillText(fmtF(c.val),0,-16);
+    } else if(c.type==='L'){
+      ctx.beginPath(); for(let i=0;i<4;i++) ctx.arc(-18+i*12,0,6,Math.PI,0,false); ctx.stroke();
+      ctx.fillStyle='#5c6672'; ctx.fillText(fmtH(c.val),0,-16);
+    } else if(c.type==='V'||c.type==='VAC'){
+      ctx.beginPath(); ctx.arc(0,0,15,0,7); ctx.stroke();
+      if(c.type==='V'){ ctx.fillText('+',0,-6); ctx.fillText('−',0,12); ctx.fillStyle='#5c6672'; ctx.fillText(c.val+'V',0,-24); }
+      else{
+        ctx.font='12px sans-serif'; ctx.fillText(c.wave==='sine'?'~':'⊓',0,4);
+        ctx.fillStyle='#5c6672'; ctx.font='10px sans-serif'; ctx.fillText(c.amp+'V '+c.freq+'Hz',0,-24);
+      }
+    } else if(c.type==='D'||c.type==='LED'){
+      const glow=c.type==='LED'&&c.cur>1e-3;
+      if(glow){ ctx.beginPath(); ctx.arc(0,0,20,0,7); ctx.fillStyle=`rgba(255,220,60,${Math.min(.8,c.cur*30)})`; ctx.fill(); }
+      ctx.beginPath(); ctx.moveTo(-12,-9); ctx.lineTo(-12,9); ctx.lineTo(10,0); ctx.closePath();
+      ctx.fillStyle=c.type==='LED'?(c.cur>1e-3?'#f5c518':'#7a8494'):'#33404f'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(12,-9); ctx.lineTo(12,9); ctx.stroke();
+      if(c.type==='LED'){ ctx.beginPath(); ctx.moveTo(2,-10); ctx.lineTo(8,-16); ctx.moveTo(8,-10); ctx.lineTo(14,-16); ctx.stroke(); }
+      ctx.fillStyle='#5c6672'; ctx.fillText(c.type,0,-16);
+    } else if(c.type==='SW'){
+      ctx.beginPath(); ctx.arc(-24,0,2.5,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(24,0,2.5,0,7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-24,0); c.closed?ctx.lineTo(24,0):ctx.lineTo(20,-14); ctx.stroke();
+      ctx.fillStyle='#5c6672'; ctx.fillText(c.closed?'闭合':'断开',0,-18);
+    }
+    for(const px of [-40,40]){ ctx.beginPath(); ctx.arc(px,0,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
+  }
+  ctx.restore();
+}
+const DIGI_SET=new Set(['AND','OR','XOR','NOT','TFF','CLK','IN','PROBE','SEG7']);
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.stroke(); }
+function draw7seg(cx,cy,n){
+  const SEG={a:[-12,-26,12,-26],b:[14,-24,14,-2],c:[14,2,14,24],d:[-12,26,12,26],e:[-14,2,-14,24],f:[-14,-24,-14,-2],g:[-12,0,12,0]};
+  const MAP={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcfgd',10:'aefgbc',11:'fegcd',12:'afed',13:'bcdeg',14:'afged',15:'afge'};
+  for(const s of 'abcdefg'){
+    const on=(MAP[n]||'').includes(s);
+    const [x1,y1,x2,y2]=SEG[s];
+    ctx.beginPath(); ctx.moveTo(cx+x1,cy+y1); ctx.lineTo(cx+x2,cy+y2);
+    ctx.lineWidth=4; ctx.strokeStyle=on?'#ff3b30':'#33202a'; ctx.lineCap='round'; ctx.stroke();
+  }
+  ctx.lineWidth=2; ctx.strokeStyle='#33404f'; ctx.lineCap='butt';
+}
+function drawDigi(c){
+  ctx.lineWidth=2; ctx.strokeStyle='#33404f'; ctx.fillStyle='#33404f';
+  const T=c.type;
+  if(T==='AND'||T==='OR'||T==='XOR'){
+    ctx.beginPath(); ctx.moveTo(-40,-15); ctx.lineTo(-26,-15); ctx.moveTo(-40,15); ctx.lineTo(-26,15); ctx.moveTo(26,0); ctx.lineTo(40,0); ctx.stroke();
+    rr(-26,-22,52,44,8);
+    ctx.font='13px sans-serif'; ctx.fillText(T==='AND'?'&':T==='OR'?'≥1':'=1',0,5);
+  } else if(T==='NOT'){
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-22,0); ctx.moveTo(24,0); ctx.lineTo(40,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-22,-16); ctx.lineTo(-22,16); ctx.lineTo(16,0); ctx.closePath(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(20,0,3.2,0,7); ctx.stroke();
+  } else if(T==='TFF'){
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-26,0); ctx.moveTo(26,-15); ctx.lineTo(40,-15); ctx.moveTo(26,15); ctx.lineTo(40,15); ctx.stroke();
+    rr(-26,-26,52,52,6);
+    ctx.font='12px sans-serif'; ctx.fillText('T',8,-2);
+    ctx.beginPath(); ctx.moveTo(-26,4); ctx.lineTo(-17,10); ctx.lineTo(-26,16); ctx.stroke();
+    ctx.font='9px sans-serif'; ctx.fillText('Q',19,-9); ctx.fillText('Q̄',19,21);
+  } else if(T==='CLK'){
+    rr(-20,-20,40,40,6);
+    ctx.beginPath(); ctx.moveTo(-12,8); ctx.lineTo(-12,-6); ctx.lineTo(0,-6); ctx.lineTo(0,8); ctx.lineTo(12,8); ctx.lineTo(12,-6); ctx.stroke();
+    ctx.fillStyle='#5c6672'; ctx.font='9px sans-serif'; ctx.fillText(c.freq+'Hz',0,33);
+  } else if(T==='IN'){
+    rr(-20,-20,40,40,6);
+    ctx.fillStyle=c.on?'#1a9e54':'#8a93a3'; ctx.font='bold 15px sans-serif';
+    ctx.fillText(c.on?'1':'0',0,6);
+  } else if(T==='PROBE'){
+    const on=((c._ins&&c._ins[0])||0)>2.5;
+    ctx.beginPath(); ctx.arc(0,0,14,0,7); ctx.fillStyle=on?'#1a9e54':'#2c3542'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,14,0,7); ctx.strokeStyle='#33404f'; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif'; ctx.fillText(on?'1':'0',0,5);
+  } else if(T==='SEG7'){
+    ctx.save(); ctx.fillStyle='#141419';
+    ctx.beginPath(); ctx.rect(-52,-40,104,80); ctx.fill(); ctx.restore();
+    const nibble=(c._ins||[0,0,0,0]).reduce((a,v,i)=>a+((v>2.5)?(1<<i):0),0);
+    draw7seg(6,0,nibble);
+    ctx.fillStyle='#5c6672'; ctx.font='9px sans-serif';
+    ctx.fillText('A',-45,-26); ctx.fillText('B',-45,-11); ctx.fillText('C',-45,4); ctx.fillText('D',-45,19);
+  }
+  for(const p of pinsOf(c)){ ctx.beginPath(); ctx.arc(p.x-c.x,p.y-c.y,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
+}
+/* M5 高级件：三极管 / MOSFET / 运放（在本地坐标系绘制，已含旋转） */
+function drawAdv(c){
+  const T=c.type;
+  ctx.lineWidth=2; ctx.strokeStyle='#33404f'; ctx.fillStyle='#33404f';
+  if(T==='NPN'||T==='PNP'){
+    ctx.beginPath(); ctx.arc(0,0,26,0,7); ctx.strokeStyle='#b9c2d0'; ctx.stroke(); ctx.strokeStyle='#33404f';
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-16,0); ctx.stroke();          // 基极引线
+    ctx.lineWidth=3.5; ctx.beginPath(); ctx.moveTo(-16,-16); ctx.lineTo(-16,16); ctx.stroke(); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-16,-8); ctx.lineTo(0,-22); ctx.lineTo(0,-40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-16,8); ctx.lineTo(0,22); ctx.lineTo(0,40); ctx.stroke();
+    // 发射极箭头：NPN 在下引线朝外，PNP 在上引线朝内（发射极在上）
+    if(T==='NPN'){
+      ctx.save(); ctx.translate(-4,16); ctx.rotate(Math.atan2(14,16));
+      ctx.beginPath(); ctx.moveTo(7,0); ctx.lineTo(-5,-4); ctx.lineTo(-5,4); ctx.closePath(); ctx.fill(); ctx.restore();
+    } else {
+      ctx.save(); ctx.translate(-4,-16); ctx.rotate(Math.atan2(-14,-16));
+      ctx.beginPath(); ctx.moveTo(7,0); ctx.lineTo(-5,-4); ctx.lineTo(-5,4); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+    ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672'; ctx.textAlign='left';
+    ctx.fillText(`${T} β${c.beta}`,22,-6); ctx.textAlign='center';
+    ctx.fillText(`${compV(c).toFixed(2)}V`,0,52);
+  } else if(T==='NMOS'||T==='PMOS'){
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-18,0); ctx.stroke();          // 栅极引线
+    ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-18,-16); ctx.lineTo(-18,16); ctx.stroke(); ctx.lineWidth=2;
+    for(const y of [-11,0,11]){ ctx.beginPath(); ctx.moveTo(-10,y-4.5); ctx.lineTo(-10,y+4.5); ctx.stroke(); } // 沟道
+    ctx.beginPath(); ctx.moveTo(-10,-11); ctx.lineTo(0,-11); ctx.lineTo(0,-40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-10,11); ctx.lineTo(0,11); ctx.lineTo(0,40); ctx.stroke();
+    ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672'; ctx.textAlign='left';
+    ctx.fillText(`${T} Vth=${c.vth}V`,22,-6); ctx.textAlign='center';
+    ctx.fillText(`${compV(c).toFixed(2)}V`,0,52);
+  } else if(T==='OPAMP'){
+    ctx.beginPath(); ctx.moveTo(-28,-30); ctx.lineTo(-28,30); ctx.lineTo(26,0); ctx.closePath(); ctx.stroke(); // 三角
+    ctx.beginPath(); ctx.moveTo(-40,-15); ctx.lineTo(-28,-15); ctx.moveTo(-40,15); ctx.lineTo(-28,15);
+    ctx.moveTo(26,0); ctx.lineTo(40,0); ctx.stroke();
+    ctx.font='12px sans-serif'; ctx.fillText('−',-22,-11); ctx.fillText('+',-22,19);
+    ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672';
+    ctx.fillText(`A=${c.gain}`,0,44); ctx.fillText(`${compV(c).toFixed(2)}V`,0,56);
+  }
+  for(const p of pinsOf(c)){ ctx.beginPath(); ctx.arc(p.x-c.x,p.y-c.y,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
+}
+const fmtR=v=>v>=1e6?v/1e6+'MΩ':v>=1e3?(v/1e3).toFixed(v%1e3?1:0)+'kΩ':Math.round(v)+'Ω';
+const fmtF=v=>v<1e-6?(v*1e9).toFixed(0)+'nF':v<1e-3?(v*1e6).toFixed(0)+'µF':v+'F';
+const fmtH=v=>v<1?(v*1e3).toFixed(0)+'mH':v+'H';
+
+/* ================= 示波器（4 通道） ================= */
+const sc=document.getElementById('scope'), sctx=sc.getContext('2d');
+const CH_COLORS=['#4f9dff','#ff9f43','#1dd1a1','#ff6b81'];
+let chBuf=new Map();
+function drawScope(){
+  const dpr=window.devicePixelRatio||1, w=sc.clientWidth, h=sc.clientHeight;
+  if(sc.width!==Math.round(w*dpr)){sc.width=w*dpr;sc.height=h*dpr;}
+  sctx.setTransform(dpr,0,0,dpr,0,0);
+  sctx.clearRect(0,0,w,h);
+  sctx.strokeStyle='#1d2635';
+  for(let gy=0;gy<h;gy+=24){sctx.beginPath();sctx.moveTo(0,gy);sctx.lineTo(w,gy);sctx.stroke();}
+  document.getElementById('scopeTitle').textContent =
+    selComps.length?`示波器 ${selComps.length} 通道`:'示波器：点击元件加入通道';
+  document.getElementById('scopeCh').innerHTML =
+    selComps.map((c,i)=>`<span style="color:${CH_COLORS[i]}">● ${DEF[c.type].name} ${compV(c).toFixed(2)}V</span>`).join('　');
+  if(!selComps.length) return;
+  let max=1e-6;
+  for(const c of selComps){ const b2=chBuf.get(c.id)||[]; for(const v of b2) max=Math.max(max,Math.abs(v)); }
+  selComps.forEach((c,i)=>{
+    const buf=chBuf.get(c.id)||[]; if(buf.length<2) return;
+    const mid=h/2, amp=(h-16)/2/max;
+    sctx.beginPath(); sctx.strokeStyle=CH_COLORS[i]; sctx.lineWidth=1.8;
+    buf.forEach((v,j)=>{ const x=j/(buf.length-1)*w, y=mid-v*amp; j?sctx.lineTo(x,y):sctx.moveTo(x,y); });
+    sctx.stroke();
+  });
+  sctx.fillStyle='#8fa3c8'; sctx.font='10px sans-serif'; sctx.fillText(`量程 ±${max.toFixed(2)}V`,w-90,h-8);
+}
+
+/* ================= 主循环 ================= */
+function tick(){
+  if(topoDirty){ buildNodes(); nodeV=[]; topoDirty=false; }
+  if(running){
+    for(let k=0;k<50*speed;k++) stepOnce();
+    animT++;
+    for(const c of selComps){
+      if(!chBuf.has(c.id)) chBuf.set(c.id,[]);
+      const b2=chBuf.get(c.id); b2.push(compV(c)); if(b2.length>600) b2.shift();
+    }
+  }
+  draw(); drawScope();
+  requestAnimationFrame(tick);
+}
+function setStatus(s){ document.getElementById('status').textContent=s; }
+
+/* ================= 交互 ================= */
+const cvEl=cv;
+function evPos(e){ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+const snap=p=>({x:Math.round(p.x/GRID)*GRID,y:Math.round(p.y/GRID)*GRID});
+const DIMS={AND:{w:48,h:26},OR:{w:48,h:26},XOR:{w:48,h:26},NOT:{w:48,h:22},TFF:{w:46,h:30},CLK:{w:24,h:24},IN:{w:24,h:24},PROBE:{w:18,h:20},SEG7:{w:56,h:44},
+  NPN:{w:30,h:34},PNP:{w:30,h:34},NMOS:{w:28,h:34},PMOS:{w:28,h:34},OPAMP:{w:36,h:32}};
+const hitComp=p=>comps.find(c=>{const d=DIMS[c.type]||{w:28,h:28}; return Math.abs(p.x-c.x)<d.w&&Math.abs(p.y-c.y)<d.h;});
+function hitPin(p){ for(const c of comps) for(const pin of pinsOf(c)) if(Math.hypot(pin.x-p.x,pin.y-p.y)<9) return pin; return null; }
+function hitWire(p){
+  for(const wd of wires){
+    const dx=wd.b.x-wd.a.x, dy=wd.b.y-wd.a.y, L2=dx*dx+dy*dy||1;
+    const t=Math.max(0,Math.min(1,((p.x-wd.a.x)*dx+(p.y-wd.a.y)*dy)/L2));
+    if(Math.hypot(p.x-(wd.a.x+t*dx),p.y-(wd.a.y+t*dy))<6) return wd;
+  }
+  return null;
+}
+let dragC=null, dragOff=null;
+cv.addEventListener('mousemove',e=>{ mouse=evPos(e);
+  if(dragC){ const p=evPos(e), s=snap({x:p.x-dragOff.x,y:p.y-dragOff.y});
+    if(s.x!==dragC.x||s.y!==dragC.y){ dragC.x=s.x; dragC.y=s.y; topoDirty=true; } }
+});
+cv.addEventListener('mousedown',e=>{
+  const p=evPos(e), s=snap(p);
+  if(placing){ comps.push(mkComp(placing,s.x,s.y,placingRot)); topoDirty=true; if(!e.shiftKey) placing=null; return; }
+  const pin=hitPin(p); if(pin){ wireFrom={...pin}; return; }
+  const c=hitComp(p);
+  if(c){
+    if(e.shiftKey){ const i=selComps.indexOf(c); if(i>=0) selComps.splice(i,1); else if(selComps.length<4) selComps.push(c); }
+    else selComps=[c];
+    propsTarget=c; showProps(); dragC=c; dragOff={x:p.x-c.x,y:p.y-c.y}; return;
+  }
+  const w=hitWire(p);
+  if(w){ propsTarget=w; showProps(); return; }
+  selComps=[]; propsTarget=null; showProps();
+});
+window.addEventListener('mouseup',()=>{ dragC=null; });
+cv.addEventListener('mouseup',e=>{
+  if(wireFrom){
+    const p=evPos(e), pin=hitPin(p)||snap(p);
+    if(Math.hypot(pin.x-wireFrom.x,pin.y-wireFrom.y)>GRID){ wires.push({id:nid++,a:{...wireFrom},b:{...pin}}); topoDirty=true; }
+    wireFrom=null;
+  }
+});
+cv.addEventListener('dblclick',e=>{
+  const c=hitComp(evPos(e));
+  if(c&&c.type==='SW'){ c.closed=!c.closed; topoDirty=true; showProps(); }
+  if(c&&c.type==='IN'){ c.on=!c.on; showProps(); }
+});
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ placing=null; wireFrom=null; }
+  if((e.key==='r'||e.key==='R')){
+    if(placing) placingRot^=1;
+    else if(propsTarget&&propsTarget.type&&!DIGI_SET.has(propsTarget.type)){ propsTarget.rot^=1; topoDirty=true; }
+  }
+  if((e.key==='Delete'||e.key==='Backspace')&&!e.target.matches('input,select')&&propsTarget){
+    if(propsTarget.type){ comps=comps.filter(c=>c!==propsTarget); selComps=selComps.filter(c=>c!==propsTarget); }
+    else wires=wires.filter(w=>w!==propsTarget);
+    propsTarget=null; showProps(); topoDirty=true;
+  }
+});
+
+/* ================= 属性面板 ================= */
+function showProps(){
+  const box=document.getElementById('propsBody'), t=propsTarget;
+  if(!t){ box.innerHTML='<p style="color:var(--muted);font-size:12px">点击画布中的元件查看/修改参数</p>'; return; }
+  if(t.a){ box.innerHTML=`<div class="row"><label>类型</label><div>导线</div></div><button class="dbtn" id="delB">删除导线</button>`;
+    document.getElementById('delB').onclick=()=>{ wires=wires.filter(w=>w!==t); propsTarget=null; showProps(); topoDirty=true; }; return; }
+  const c=t;
+  let h=`<div class="row"><label>类型</label><div><b>${DEF[c.type].name}</b></div></div>`;
+  if(c.type==='V') h+=`<div class="row"><label>电压（V）</label><input id="pv" type="number" step="any" value="${c.val}"></div>`;
+  if(c.type==='VAC') h+=`<div class="row"><label>波形</label><select id="pw"><option value="sine" ${c.wave==='sine'?'selected':''}>正弦</option><option value="square" ${c.wave==='square'?'selected':''}>方波</option></select></div>
+    <div class="row"><label>幅值（V）</label><input id="pa" type="number" step="any" value="${c.amp}"></div>
+    <div class="row"><label>频率（Hz）</label><input id="pf" type="number" step="any" value="${c.freq}"></div>
+    <div class="row"><label>直流偏置（V）</label><input id="po" type="number" step="any" value="${c.offset}"></div>`;
+  if(c.type==='R') h+=`<div class="row"><label>阻值（Ω）</label><input id="pv" type="number" step="any" value="${c.val}"></div>`;
+  if(c.type==='POT') h+=`<div class="row"><label>位置（%）</label><input id="pr" type="range" min="0" max="100" value="${c.ratio}"></div>
+    <div class="row"><label>当前阻值</label><div id="prv">${fmtR(Math.max(10,c.rmax*c.ratio/100))}</div></div>`;
+  if(c.type==='C') h+=`<div class="row"><label>容值（F）</label><input id="pv" type="number" step="any" value="${c.val}"></div>`;
+  if(c.type==='L') h+=`<div class="row"><label>感值（H）</label><input id="pv" type="number" step="any" value="${c.val}"></div>`;
+  if(c.type==='SW') h+=`<div class="row"><label>状态</label><div>${c.closed?'闭合（双击切换）':'断开（双击切换）'}</div></div>`;
+  if(c.type==='CLK') h+=`<div class="row"><label>频率（Hz）</label><input id="pclk" type="number" step="any" value="${c.freq}"></div>`;
+  if(c.type==='IN') h+=`<div class="row"><label>状态</label><div>双击画布切换 0/1，当前 ${c.on?1:0}</div></div>`;
+  if(c.type==='TFF') h+=`<div class="row"><label>状态</label><div>Q=${c.on?1:0}（CLK 上升沿翻转）</div></div>`;
+  if(c.type==='NPN'||c.type==='PNP') h+=`<div class="row"><label>β（电流放大倍数）</label><input id="pbt" type="number" step="any" value="${c.beta}"></div>`;
+  if(c.type==='NMOS'||c.type==='PMOS') h+=`<div class="row"><label>阈值电压 Vth（V）</label><input id="pvt" type="number" step="any" value="${c.vth}"></div>
+    <div class="row"><label>跨导系数 k（A/V²）</label><input id="pkk" type="number" step="any" value="${c.k}"></div>`;
+  if(c.type==='OPAMP') h+=`<div class="row"><label>开环增益 A</label><input id="pga" type="number" step="any" value="${c.gain}"></div>
+    <div class="row"><label>输出饱和电压（V）</label><input id="pvs" type="number" step="any" value="${c.vsat}"></div>`;
+  h+=`<div class="row"><label>实时</label><div id="rt" style="font-variant-numeric:tabular-nums">-</div></div>`;
+  h+=`<button class="dbtn" id="delB">删除元件</button>`;
+  box.innerHTML=h;
+  const g=id=>document.getElementById(id);
+  if(g('pv')) g('pv').onchange=()=>{ const v=parseFloat(g('pv').value); if(isFinite(v)&&v!==0){c.val=v; topoDirty=true;} };
+  if(g('pw')) g('pw').onchange=()=>c.wave=g('pw').value;
+  if(g('pa')) g('pa').onchange=()=>c.amp=parseFloat(g('pa').value)||0;
+  if(g('pf')) g('pf').onchange=()=>c.freq=Math.max(0.01,parseFloat(g('pf').value)||1);
+  if(g('pclk')) g('pclk').onchange=()=>c.freq=Math.max(0.01,parseFloat(g('pclk').value)||1);
+  if(g('po')) g('po').onchange=()=>c.offset=parseFloat(g('po').value)||0;
+  if(g('pbt')) g('pbt').onchange=()=>c.beta=Math.max(10,parseFloat(g('pbt').value)||100);
+  if(g('pvt')) g('pvt').onchange=()=>c.vth=Math.max(0.1,parseFloat(g('pvt').value)||2);
+  if(g('pkk')) g('pkk').onchange=()=>c.k=Math.max(1e-6,parseFloat(g('pkk').value)||2e-3);
+  if(g('pga')) g('pga').onchange=()=>c.gain=Math.max(10,parseFloat(g('pga').value)||1e5);
+  if(g('pvs')) g('pvs').onchange=()=>c.vsat=Math.max(0.5,parseFloat(g('pvs').value)||12);
+  if(g('pr')) g('pr').oninput=()=>{ c.ratio=+g('pr').value; g('prv').textContent=fmtR(Math.max(10,c.rmax*c.ratio/100)); topoDirty=true; };
+  g('delB').onclick=()=>{ comps=comps.filter(x=>x!==c); selComps=selComps.filter(x=>x!==c); propsTarget=null; showProps(); topoDirty=true; };
+}
+setInterval(()=>{   // 属性面板实时刷新
+  const rt=document.getElementById('rt');
+  if(rt&&propsTarget&&propsTarget.type) rt.textContent=`${compV(propsTarget).toFixed(3)} V · ${(Math.abs(propsTarget.cur||0)*1000).toFixed(2)} mA`;
+},300);
+
+/* ================= 元件库 ================= */
+const PAL=[
+  ['V','M-9 0 A9 9 0 1 0 9 0 A9 9 0 1 0 -9 0 M-3 -4 h6 M0 -7 v6 M-3 5 h6'],
+  ['VAC','M-9 0 A9 9 0 1 0 9 0 A9 9 0 1 0 -9 0 M-5 0 q2.5 -6 5 0 q2.5 6 5 0'],
+  ['R','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5'],
+  ['POT','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M0 -2 l0 -6 m-2 2 l2 -2 l2 2'],
+  ['C','M-2 -8 v16 M2 -8 v16 M-14 0 h12 M2 0 h12'],
+  ['L','M-14 0 a4 4 0 0 1 8 0 a4 4 0 0 1 8 0 a4 4 0 0 1 8 0'],
+  ['D','M-6 -7 v14 l12 -7 z M8 -7 v14'],
+  ['LED','M-6 -7 v14 l12 -7 z M8 -7 v14 M2 -9 l5 -5 m0 3 l-3 -3'],
+  ['SW','M-12 0 h4 m16 0 h-4 m-12 0 l10 -8'],
+  ['AND','M-11 -8 h7 a8 8 0 0 1 0 16 h-7 z'],
+  ['OR','M-12 -8 q5 8 0 16 q9 0 19 -8 q-10 -8 -19 -8 z'],
+  ['XOR','M-8 -8 q5 8 0 16 q9 0 19 -8 q-10 -8 -19 -8 z M-14 -8 q5 8 0 16'],
+  ['NOT','M-11 -8 v16 l17 -8 z M9 0 a2.5 2.5 0 1 0 .1 0'],
+  ['TFF','M-11 -10 h22 v20 h-22 z M-11 2 l5 3 l-5 3 M3 -4 v6 m-3 -6 h6'],
+  ['CLK','M-13 6 v-9 h8 v9 h9 v-9'],
+  ['IN','M-9 -9 h18 v18 h-18 z M-4 4 l8 -8'],
+  ['PROBE','M-8 0 a8 8 0 1 0 .1 0'],
+  ['SEG7','M-8 -10 h16 v20 h-16 z M-4 -5 h8 M-4 0 h8 M-4 5 h8'],
+  ['GND','M0 -8 v6 M-9 0 h18 M-5 4 h10 M-2 8 h4'],
+  ['NPN','M-9 0 h7 M-2 -9 v18 M-2 -4 l9 -7 M-2 4 l9 7'],
+  ['PNP','M-9 0 h7 M-2 -9 v18 M-2 -4 l9 -7 M-2 4 l9 7'],
+  ['NMOS','M-9 0 h5 M-4 -9 v18 M-3 -6 h2 M-3 0 h2 M-3 6 h2 M-1 -6 l9 -6 M-1 6 l9 6'],
+  ['PMOS','M-9 0 h5 M-4 -9 v18 M-3 -6 h2 M-3 0 h2 M-3 6 h2 M-1 -6 l9 -6 M-1 6 l9 6'],
+  ['OPAMP','M-9 -10 l18 10 l-18 10 z'],
+];
+const palBox=document.getElementById('palette');
+for(const [t,d] of PAL){
+  const el=document.createElement('div'); el.className='pal';
+  el.innerHTML=`<svg width="34" height="22" viewBox="-17 -11 34 22"><path d="${d}" fill="none" stroke="#33404f" stroke-width="1.6"/></svg><span>${DEF[t].name}</span>`;
+  el.onclick=()=>{ placing=t; placingRot=0; wireFrom=null; };
+  palBox.appendChild(el);
+}
+
+/* ================= 顶栏 ================= */
+document.getElementById('runBtn').onclick=e=>{ running=!running; e.target.textContent=running?'⏸ 暂停':'▶ 运行'; e.target.classList.toggle('on',running); };
+document.getElementById('speed').onchange=e=>speed=+e.target.value;
+document.getElementById('clearBtn').onclick=()=>{ comps=[];wires=[];selComps=[];propsTarget=null;showProps();topoDirty=true;chBuf=new Map(); };
+
+/* ================= 演示：桥式整流 + 滤波 ================= */
+function demoBridge(){
+  comps=[]; wires=[]; selComps=[]; chBuf=new Map();
+  const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
+  const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
+  C('VAC',60,160,1);                    // 交流源（纵向）
+  C('D',240,100); C('D',480,100);       // D1 D2（阳极朝 AC）
+  C('D',240,220); C('D',400,220);       // D3 D4（阳极朝地轨）
+  C('C',560,130,1); C('R',610,130,1);   // 滤波电容 + 负载
+  C('GND',60,260);
+  // AC_A 列 x=160 / AC_B 列 x=440
+  W(60,120,160,120); W(160,100,160,180);          // 源上端 → AC_A
+  W(60,200,440,200);                              // 源下端 → AC_B
+  W(440,100,440,220);                             // AC_B 列
+  // D1：阳极→AC_A
+  W(200,100,160,100);
+  // D1 阴极→PLUS 轨
+  W(280,100,320,100); W(320,60,320,100); W(320,60,520,60);
+  // D2：阳极 AC_B 直连；阴极→PLUS
+  W(520,100,520,60);
+  // D3：阳极→MINUS，阴极→AC_A
+  W(200,220,200,260); W(280,220,160,220); W(160,220,160,180);
+  // D4：阳极→MINUS，阴极→AC_B
+  W(360,220,360,260);
+  // MINUS 轨 + 地
+  W(60,260,200,260); W(200,260,360,260); W(360,260,560,260);
+  // PLUS → 电容/负载
+  W(520,60,610,60); W(560,60,560,90); W(610,60,610,90);
+  W(560,170,560,260); W(610,170,610,260); W(560,260,610,260);
+  topoDirty=true;
+  const cap=comps.find(c=>c.type==='C');
+  selComps=[cap, comps.find(c=>c.type==='VAC')];  // 通道1=输出，通道2=输入
+  setStatus('桥式整流演示：通道1=滤波后输出，通道2=交流输入');
+}
+document.getElementById('demoBtn').onclick=demoBridge;
+
+/* ================= 演示：4 位波纹计数器（TFF 链 + 逻辑探针） ================= */
+function demoCounter(){
+  comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
+  const C=(t,x,y)=>{const c=mkComp(t,x,y);comps.push(c);return c;};
+  const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
+  C('CLK',120,220);                                   // 时钟（引脚在 120,240）
+  C('TFF',240,160); C('TFF',360,160); C('TFF',480,160); C('TFF',600,160);
+  C('PROBE',280,95); C('PROBE',400,95); C('PROBE',520,95); C('PROBE',640,95);
+  W(120,240,120,260); W(120,260,200,260); W(200,260,200,160);   // CLK → T1.CLK
+  W(280,175,280,210); W(280,210,320,210); W(320,210,320,160);   // T1.Q̄ → T2.CLK
+  W(400,175,400,220); W(400,220,440,220); W(440,220,440,160);   // T2.Q̄ → T3.CLK
+  W(520,175,520,230); W(520,230,560,230); W(560,230,560,160);   // T3.Q̄ → T4.CLK
+  W(280,145,280,110); W(400,145,400,110);                        // Q → 探针
+  W(520,145,520,110); W(640,145,640,110);
+  topoDirty=true;
+  setStatus('4位计数器：探针从左到右 = 二进位 1·2·4·8，时序 2Hz');
+}
+document.getElementById('demoCntBtn').onclick=demoCounter;
+
+/* ================= 演示：共射放大（NPN 三极管） ================= */
+function demoAmp(){
+  comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
+  const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
+  const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
+  const vcc=C('V',760,120,1); vcc.val=12;
+  const rc=C('R',400,160,1); rc.val=4700;      // 集电极负载
+  const re=C('R',400,340,1); re.val=1000;      // 发射极电阻
+  const rb1=C('R',280,160,1); rb1.val=68000;   // 上偏置
+  const rb2=C('R',280,320,1); rb2.val=15000;   // 下偏置
+  const cin=C('C',200,260,0); cin.val=1e-7;    // 输入耦合
+  const vac=C('VAC',120,300,1); vac.amp=0.1; vac.freq=1000;
+  const q=C('NPN',400,260);
+  C('GND',600,380);
+  // 输入耦合：VAC → Cin → 基极
+  W(120,260,160,260); W(240,260,280,260); W(280,260,360,260);
+  // 偏置分压：Rb1 接 Vcc，Rb2 接地
+  W(280,200,280,260); W(280,120,280,100);
+  W(280,260,280,280); W(280,360,280,380);
+  // 集电极负载 → Vcc 轨
+  W(400,120,400,100); W(280,100,400,100); W(400,100,760,100); W(760,80,760,100);
+  W(400,200,400,220);                                  // Rc → 集电极
+  // 地轨
+  W(280,380,400,380); W(400,380,600,380); W(600,380,760,380);
+  W(120,340,120,380); W(120,380,280,380); W(760,160,760,380);
+  topoDirty=true;
+  selComps=[q,rc];
+  setStatus('共射放大：通道1=Vce，通道2=Rc 电压（输出，反相）');
+}
+document.getElementById('demoAmpBtn').onclick=demoAmp;
+
+/* ================= 演示：N-MOSFET 低边开关 ================= */
+function demoMos(){
+  comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
+  const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
+  const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
+  const v=C('V',120,140,1); v.val=5;
+  const led=C('LED',340,100);
+  const r=C('R',420,100); r.val=330;
+  const m=C('NMOS',460,260); m.vth=2; m.k=0.02;
+  const inp=C('IN',300,240); inp.on=true;
+  C('GND',460,380);
+  W(120,100,300,100);                       // +5V 轨 → LED
+  W(460,100,460,220);                       // R → 漏极
+  W(300,260,420,260);                       // 逻辑输入 → 栅极
+  W(460,300,460,380); W(120,180,120,380); W(120,380,460,380);
+  topoDirty=true;
+  selComps=[m,led];
+  setStatus('MOS 开关：双击 IN 切换 0/1，栅极 5V 时 LED 点亮');
+}
+document.getElementById('demoMosBtn').onclick=demoMos;
+
+/* ================= 演示：运放同相放大 ×2 ================= */
+function demoOp(){
+  comps=[]; wires=[]; selComps=[]; chBuf=new Map(); simTime=0;
+  const C=(t,x,y,r)=>{const c=mkComp(t,x,y,r);comps.push(c);return c;};
+  const W=(x1,y1,x2,y2)=>wires.push({id:nid++,a:{x:x1,y:y1},b:{x:x2,y:y2}});
+  const vin=C('VAC',120,340,1); vin.amp=0.5; vin.freq=100;
+  const op=C('OPAMP',400,300);
+  const r1=C('R',400,180); r1.val=10000;    // 反馈电阻
+  const r2=C('R',260,325,1); r2.val=10000;  // 接地电阻
+  C('GND',400,380);
+  W(120,300,200,300); W(200,300,200,315); W(200,315,360,315);   // 输入 → IN+
+  W(440,300,560,300); W(560,300,560,180); W(440,180,560,180);   // 输出 → 反馈
+  W(360,285,360,180);                                            // 反相端 → R1 左端
+  W(260,285,360,285);                                            // 反相端 → R2 顶
+  W(260,365,260,380); W(120,380,260,380); W(260,380,400,380);
+  topoDirty=true;
+  selComps=[op,vin];
+  setStatus('运放同相放大 ×2：通道1=输出，通道2=输入 0.5V/100Hz');
+}
+document.getElementById('demoOpBtn').onclick=demoOp;
+
+demoAmp();
+tick();
+</script>
+</body>
+</html>
