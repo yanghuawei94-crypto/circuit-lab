@@ -38,7 +38,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 #scopeWrap{grid-column:1/3;background:#0f1420;border-top:1px solid var(--rule);position:relative;}
 #scope{display:block;width:100%;height:100%;}
 #scopeTitle{position:absolute;top:6px;left:12px;font-size:11px;color:#8fa3c8;}
-#scopeCh{position:absolute;top:6px;right:12px;font-size:11px;}
+#scopeCh{position:absolute;top:6px;right:12px;font-size:11px;text-align:right;line-height:1.6;max-width:calc(100% - 150px);}
 </style>
 </head>
 <body>
@@ -730,7 +730,29 @@ const fmtH=v=>v<1?(v*1e3).toFixed(0)+'mH':v+'H';
 /* ================= 示波器（4 通道） ================= */
 const sc=document.getElementById('scope'), sctx=sc.getContext('2d');
 const CH_COLORS=['#4f9dff','#ff9f43','#1dd1a1','#ff6b81'];
-let chBuf=new Map();
+let chBuf=new Map(), chTs=0.02;      // chTs：相邻采样点之间的仿真时间（随速度档变化）
+/* 单通道测量：峰峰值 / 平均值 / 有效值 / 频率（过中位线迟滞计数） */
+function chMeasure(buf){
+  const n=buf.length;
+  if(n<2) return null;
+  let mn=Infinity,mx=-Infinity,sum=0,sq=0;
+  for(const v of buf){ if(v<mn)mn=v; if(v>mx)mx=v; sum+=v; sq+=v*v; }
+  const avg=sum/n, rms=Math.sqrt(sq/n), amp=(mx-mn)/2, mid=(mx+mn)/2;
+  let f=0;
+  if(n>8&&amp>0.02){
+    const hyst=amp*0.15;
+    let st=buf[0]>mid?1:-1, cross=0, first=-1, last=-1;
+    for(let i=1;i<n;i++){
+      const s=buf[i]>mid+hyst?1:(buf[i]<mid-hyst?-1:st);
+      if(st<0&&s>0){ if(first<0)first=i; last=i; cross++; }
+      st=s;
+    }
+    const T=(last-first)*chTs;
+    if(cross>=2&&T>4*chTs) f=(cross-1)/T;   // 采样率不足时不报频率
+  }
+  return {mn,mx,vpp:mx-mn,avg,rms,f};
+}
+const fmtFreq=f=>f<=0?'—':(f>=1e3?(f/1e3).toFixed(2)+'kHz':f.toFixed(2)+'Hz');
 function drawScope(){
   const dpr=window.devicePixelRatio||1, w=sc.clientWidth, h=sc.clientHeight;
   if(sc.width!==Math.round(w*dpr)){sc.width=w*dpr;sc.height=h*dpr;}
@@ -741,15 +763,19 @@ function drawScope(){
   document.getElementById('scopeTitle').textContent =
     selComps.length?`示波器 ${selComps.length} 通道`:'示波器：点击元件加入通道';
   document.getElementById('scopeCh').innerHTML =
-    selComps.map((c,i)=>`<span style="color:${CH_COLORS[i]}">● ${DEF[c.type].name} ${compV(c).toFixed(2)}V</span>`).join('　');
+    selComps.map((c,i)=>{
+      const m=chMeasure(chBuf.get(c.id)||[]);
+      const extra=m?` pp ${m.vpp.toFixed(2)}V · rms ${m.rms.toFixed(2)}V · avg ${m.avg.toFixed(2)}V · ${fmtFreq(m.f)}`:'';
+      return `<span style="color:${CH_COLORS[i]}">● ${DEF[c.type].name} ${compV(c).toFixed(2)}V${extra}</span>`;
+    }).join('<br>');
   if(!selComps.length) return;
   let max=1e-6;
   for(const c of selComps){ const b2=chBuf.get(c.id)||[]; for(const v of b2) max=Math.max(max,Math.abs(v)); }
   selComps.forEach((c,i)=>{
     const buf=chBuf.get(c.id)||[]; if(buf.length<2) return;
-    const mid=h/2, amp=(h-16)/2/max;
+    const mid=h/2, amp=(h-16)/2/max, dp=Math.ceil(buf.length/600);
     sctx.beginPath(); sctx.strokeStyle=CH_COLORS[i]; sctx.lineWidth=1.8;
-    buf.forEach((v,j)=>{ const x=j/(buf.length-1)*w, y=mid-v*amp; j?sctx.lineTo(x,y):sctx.moveTo(x,y); });
+    for(let j=0;j<buf.length;j+=dp){ const x=j/(buf.length-1)*w, y=mid-buf[j]*amp; j?sctx.lineTo(x,y):sctx.moveTo(x,y); }
     sctx.stroke();
   });
   sctx.fillStyle='#8fa3c8'; sctx.font='10px sans-serif'; sctx.fillText(`量程 ±${max.toFixed(2)}V`,w-90,h-8);
@@ -759,12 +785,16 @@ function drawScope(){
 function tick(){
   if(topoDirty){ buildNodes(); nodeV=[]; topoDirty=false; }
   if(running){
-    for(let k=0;k<50*speed;k++) stepOnce();
-    animT++;
-    for(const c of selComps){
-      if(!chBuf.has(c.id)) chBuf.set(c.id,[]);
-      const b2=chBuf.get(c.id); b2.push(compV(c)); if(b2.length>600) b2.shift();
+    const total=50*speed, every=Math.max(1,Math.round(2e-3/DT));   // 每 2ms 采一点
+    chTs=every*DT;
+    for(let k=0;k<total;k++){
+      stepOnce();
+      if((k+1)%every===0) for(const c of selComps){
+        if(!chBuf.has(c.id)) chBuf.set(c.id,[]);
+        const b2=chBuf.get(c.id); b2.push(compV(c)); if(b2.length>1500) b2.shift();
+      }
     }
+    animT++;
   }
   draw(); drawScope();
   requestAnimationFrame(tick);
