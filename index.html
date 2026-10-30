@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M16 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）；仪器三视图切换（面板 → 符号 → 图标，对齐 Multisim Icon/Symbol/Panel），逻辑探针 PROBE 手动接入 XLA1 通道（P1–P4 优先显示）。">
-<title>M16 · 电路实验室</title>
+<meta name="description" content="M17 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）；仪器三视图切换（面板 → 符号 → 图标，对齐 Multisim Icon/Symbol/Panel），逻辑探针 PROBE 手动接入 XLA1 通道（P1–P4 优先显示）；仪器布局记忆（开关、拖动位置、三视图存本机，刷新后原样恢复）。">
+<title>M17 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -152,7 +152,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 </style>
 </head>
 <body>
-<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M16</span></div>
+<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M17</span></div>
 <div id="topbar">
   <div class="tgrp">
     <button class="tbtn" id="libBtn" title="打开元件库（L）"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/><path d="M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3"/></svg><span>元件库</span></button>
@@ -2216,6 +2216,7 @@ function setInstView(kind,next){
   instViewOf[kind]=nx;
   el.classList.remove('v-sym','v-icon');
   if(nx!=='panel') el.classList.add('v-'+nx);
+  instSave();
 }
 document.querySelectorAll('#instLayer .instV').forEach(b=>{
   b.onclick=e=>{ e.stopPropagation(); setInstView(b.closest('.inst').dataset.kind); };
@@ -2229,6 +2230,7 @@ function setInst(kind,on){
   if(kind==='logic'&&on) laReset();                                          // 逻辑分析仪：打开时清空时序缓冲
   instOpen=!!document.querySelector('#instLayer .inst.show');
   if(on) refreshInst();
+  instSave();
 }
 document.getElementById('meterBtn').onclick=()=>setInst('meter');
 document.getElementById('fgBtn').onclick=()=>setInst('fg');
@@ -2254,10 +2256,40 @@ document.querySelectorAll('#instLayer .inst').forEach(el=>{
       el.style.left=Math.min(Math.max(0,ox+ev.clientX-e.clientX),layer.width-el.offsetWidth)+'px';
       el.style.top =Math.min(Math.max(0,oy+ev.clientY-e.clientY),layer.height-el.offsetHeight)+'px';
     };
-    const up=()=>{ window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); };
+    const up=()=>{ window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); instSave(); };
     window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up); e.preventDefault();
   });
 });
+/* 仪器布局记忆：开关状态、拖动后的 left/top、三视图一起存本机，刷新/切换演示后原样恢复 */
+const INST_STORE=()=>STORE_KEY+':inst';
+let instRestoring=false;
+function instSave(){
+  if(instRestoring) return;
+  const o={};
+  document.querySelectorAll('#instLayer .inst').forEach(el=>{
+    const k=el.dataset.kind;
+    o[k]={on:el.classList.contains('show'), view:instViewOf[k]||'panel'};
+    const x=parseFloat(el.style.left), y=parseFloat(el.style.top);
+    if(isFinite(x)&&isFinite(y)){ o[k].x=x; o[k].y=y; }   // 只有拖动过（left/top 都被写过）才记绝对位置
+  });
+  try{ localStorage.setItem(INST_STORE(), JSON.stringify(o)); }catch(e){}
+}
+function instLoad(){
+  let o; try{ o=JSON.parse(localStorage.getItem(INST_STORE())||'null'); }catch(e){}
+  if(!o) return;
+  instRestoring=true;
+  try{
+    document.querySelectorAll('#instLayer .inst').forEach(el=>{
+      const k=el.dataset.kind, s=o[k]; if(!s) return;
+      if(typeof s.x==='number'&&typeof s.y==='number'&&isFinite(s.x)&&isFinite(s.y)){   // 只有拖动过的面板才恢复绝对位置
+        el.style.left=Math.max(0,s.x)+'px'; el.style.top=Math.max(0,s.y)+'px';
+        el.style.right='auto'; el.style.bottom='auto';
+      }
+      if(s.view&&s.view!=='panel') setInstView(k,s.view);
+      if(s.on) setInst(k,true);
+    });
+  }finally{ instRestoring=false; }
+}
 function resOf(c){
   const t=c.type;
   if(t==='R') return fmtR(c.val);
@@ -3085,6 +3117,7 @@ try{
   else setStatus('已恢复上次保存的电路');
 }catch(e){ demoAmp(); }
 syncUndoBtns();
+instLoad();                       // 恢复上次的仪器开关 / 位置 / 三视图
 tick();
 </script>
 </body>
