@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M13 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记。">
-<title>M13 · 电路实验室</title>
+<meta name="description" content="M14 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组。">
+<title>M14 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -114,10 +114,29 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 .pal:hover{border-color:#c8d4e8;background:#f2f6fd;color:#111;}
 .pal svg path{stroke:#1d1d1d;}
 #palette .pal span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* ===== Multisim 风格仪器面板（浮于画布之上、可拖动、LCD 读数） ===== */
+#instLayer{position:absolute;inset:0;pointer-events:none;z-index:20;}
+.inst{position:absolute;pointer-events:auto;width:212px;display:none;background:linear-gradient(#e9e6e3,#d2cecb);border:1px solid #8f8b89;border-radius:7px 7px 5px 5px;box-shadow:0 10px 26px rgba(0,0,0,.26),inset 0 1px 0 #fff;font-size:11px;color:#242424;}
+.inst.show{display:block;}
+.instHead{display:flex;align-items:center;gap:6px;padding:4px 8px;background:linear-gradient(#f7f5f3,#dcd8d5);border-bottom:1px solid #a9a5a2;border-radius:6px 6px 0 0;cursor:move;font-size:10px;font-weight:700;letter-spacing:.3px;color:#333;}
+.instHead .instX{margin-left:auto;border:0;background:none;cursor:pointer;font-size:11px;color:#555;line-height:1;padding:2px 4px;border-radius:3px;}
+.instHead .instX:hover{background:#d8d4d1;}
+.instBody{padding:8px;}
+.lcd{display:flex;align-items:baseline;justify-content:flex-end;min-height:36px;padding:6px 8px;background:linear-gradient(#10231a,#08130d);border:1px solid #3c4a41;border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.6);font-family:"SF Mono",Menlo,Consolas,monospace;color:#69ff9b;text-shadow:0 0 6px rgba(80,255,140,.5);}
+.lcd b{font-size:21px;font-weight:600;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lcdSub{font-size:10px;color:#57e88f;margin-top:2px;}
+.instRow{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap;}
+.mbtn{flex:1;padding:3px 4px;border:1px solid #9d9997;border-radius:3px;background:linear-gradient(#f4f2f0,#ddd9d6);font-size:10px;cursor:pointer;color:#333;white-space:nowrap;}
+.mbtn:hover{border-color:#6f6b69;}
+.mbtn.on{background:linear-gradient(#3b3b3b,#1e1e1e);color:#8dffb5;border-color:#111;text-shadow:0 0 4px rgba(90,255,140,.5);}
+.instFoot{margin-top:6px;font-size:10px;color:#4a4a4a;line-height:1.45;}
+.inst .fld{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;}
+.inst .fld label{font-size:10px;color:#3a3a3a;}
+.inst .fld input,.inst .fld select{width:96px;padding:2px 5px;border:1px solid #9d9997;border-radius:3px;font-size:10px;background:#fbfaf9;color:#222;}
 </style>
 </head>
 <body>
-<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M13</span></div>
+<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M14</span></div>
 <div id="topbar">
   <div class="tgrp">
     <button class="tbtn" id="libBtn" title="打开元件库（L）"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/><path d="M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3"/></svg><span>元件库</span></button>
@@ -153,7 +172,9 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
     <button class="tbtn on" id="runBtn"><svg id="runIcon" viewBox="0 0 24 24"><rect x="8" y="5" width="3" height="14"/><rect x="14" y="5" width="3" height="14"/></svg><span id="runLbl">暂停</span></button>
     <button class="tbtn" id="stepBtn" title="暂停时推进一帧" disabled><svg viewBox="0 0 24 24"><path d="M6 5l9 7-9 7z"/><rect x="17" y="5" width="2.5" height="14"/></svg><span>单步</span></button>
     <button class="tbtn on" id="scopeBtn"><svg viewBox="0 0 24 24"><path d="M2 12h3l2-7 4 14 3-9 2 4h6"/></svg><span>示波器</span></button>
-    <button class="tbtn" id="meterBtn" title="万用表探针：悬停元件读电压/电流/功率"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12l5-4"/></svg><span>万用表</span></button>
+    <button class="tbtn" id="meterBtn" title="万用表面板 XMM1：悬停/选点读电压、电流、功率、电阻"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12l5-4"/></svg><span>万用表</span></button>
+    <button class="tbtn" id="fgBtn" title="函数发生器 XFG1：设置波形/频率/幅值/偏置"><svg viewBox="0 0 24 24"><path d="M2 12c2 0 2-7 5-7s3 14 5 14 3-7 5-7 2 7 5 7"/></svg><span>信号源</span></button>
+    <button class="tbtn" id="wmBtn" title="瓦特计 XWM1：读电压/电流/功率/功率因数"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12l4-5 M6 20h12"/></svg><span>瓦特计</span></button>
     <button class="tbtn" id="netBtn" title="显示/隐藏并查集节点分析面板"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 6h8 M18 8v8 M8 6l8 10"/></svg><span>节点</span></button>
   </div>
   <span class="sep"></span>
@@ -166,7 +187,40 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
     <div id="palHead"><input id="palSearch" placeholder="元件库筛选" autocomplete="off"><button id="palClose" title="关闭">✕</button></div>
     <div id="palBody"></div>
   </div>
-  <div id="cvWrap"><canvas id="cv"></canvas><div id="netPanel" style="display:none"></div></div>
+  <div id="cvWrap"><canvas id="cv"></canvas><div id="netPanel" style="display:none"></div>
+    <div id="instLayer">
+      <div class="inst" id="instMeter" data-kind="meter" style="left:14px;bottom:14px;z-index:20">
+        <div class="instHead"><span>XMM1 · 万用表</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instBody">
+          <div class="lcd"><b id="mmVal">—</b></div>
+          <div class="instRow" id="mmModes">
+            <button class="mbtn on" data-m="V" title="电压">V</button>
+            <button class="mbtn" data-m="A" title="电流">A</button>
+            <button class="mbtn" data-m="P" title="功率">P</button>
+            <button class="mbtn" data-m="R" title="电阻">Ω</button>
+          </div>
+          <div class="instFoot" id="mmName">悬停或点击元件测量</div>
+        </div>
+      </div>
+      <div class="inst" id="instFg" data-kind="fg" style="left:238px;bottom:14px;z-index:20">
+        <div class="instHead"><span>XFG1 · 函数发生器</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instBody">
+          <div class="fld"><label>波形</label><select id="fgWave"><option value="sine">正弦</option><option value="square">方波</option></select></div>
+          <div class="fld"><label>频率 Hz</label><input id="fgFreq" type="number" min="1" max="20000" step="any"></div>
+          <div class="fld"><label>幅值 V</label><input id="fgAmp" type="number" step="any"></div>
+          <div class="fld"><label>偏置 V</label><input id="fgOff" type="number" step="any"></div>
+          <div class="instFoot" id="fgTarget">先放置交流/方波源</div>
+        </div>
+      </div>
+      <div class="inst" id="instWm" data-kind="wm" style="left:14px;bottom:172px;z-index:20">
+        <div class="instHead"><span>XWM1 · 瓦特计</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instBody">
+          <div class="lcd" style="display:block"><b id="wmP">—</b><div class="lcdSub" id="wmVI">V — · I —</div><div class="lcdSub" id="wmPF">PF —</div></div>
+          <div class="instFoot" id="wmName">悬停或点击元件测量</div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="props"><h4 id="propsTitle">电路</h4><div id="propsBody"><p style="color:#666;font-size:12px;padding:10px">点击画布中的元件查看/修改参数</p></div>
     <div class="help">
       · 元件库点元件 → 画布点击放置（Shift 连续放）<br>
@@ -176,7 +230,9 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
       · 单击元件进示波器；<span class="kbd">Shift+点击</span> 最多 4 路<br>
       · 黄色电流点 = 方向与大小<br>
       · 节点 = 并查集分组的节点森林（同色同节点）<br>
-      · 万用表：悬停即读数（V / I / P），<span class="kbd">Esc</span> 退出<br>
+      · 万用表 XMM1：悬停/选点读 V·A·P·Ω，<span class="kbd">Esc</span> 退出<br>
+      · 信号源 XFG1：改波形/频率/幅值/偏置（绑定选中的交流源）<br>
+      · 瓦特计 XWM1：V·I·P·PF；三台仪器面板可拖动<br>
       · 单步：暂停后逐帧推进；⚠ = 过流/超功率<br>
       · IC ×33：74192/74193/74273/74157/74393/74163 等<br>
       · 机电：直流电机 · 舵机 · 按钮 · 拨动开关<br>
@@ -195,7 +251,7 @@ let comps = [], wires = [], nid = 1;
 let selComps = [];              // 示波器通道（最多 4）
 let propsTarget = null;
 let placing = null, placingRot = 0, placingKind = null, wireFrom = null;
-let mouse = {x:0,y:0}, running = true, speed = 4, topoDirty = true;
+let mouse = {x:0,y:0}, running = true, speed = 4, topoDirty = true, hoverC = null;
 let simTime = 0, animT = 0, nodeV = [], nodeCur = new Map();
 
 const DEF = {
@@ -1749,6 +1805,7 @@ function tick(){
     animT++;
   }
   draw(); drawScope();
+  if(instOpen) refreshInst();          // Multisim 仪器面板实时刷新
   requestAnimationFrame(tick);
 }
 function setStatus(s){ const el=document.getElementById('status'); el.textContent=s; el.title=s; }
@@ -1775,11 +1832,12 @@ function hitWire(p){
   return null;
 }
 let dragC=null, dragOff=null, dragStart=null, dragSnapJson=null, pressC=null;
-cv.addEventListener('mousemove',e=>{ mouse=evPos(e);
+cv.addEventListener('mousemove',e=>{ mouse=evPos(e); hoverC=hitComp(mouse);   // 仪器面板取悬停目标
   if(pressC&&dragC===pressC){ pressC.closed=false; pressC=null; topoDirty=true; }   // 按住按钮时拖动 = 改为移动元件
   if(dragC){ const p=evPos(e), s=snap({x:p.x-dragOff.x,y:p.y-dragOff.y});
     if(s.x!==dragC.x||s.y!==dragC.y){ dragC.x=s.x; dragC.y=s.y; topoDirty=true; } }
 });
+cv.addEventListener('mouseleave',()=>{ hoverC=null; });
 cv.addEventListener('mousedown',e=>{
   const p=evPos(e), s=snap(p);
   if(placing){ pushUndo(); comps.push(placeComp(s.x,s.y,placingRot)); topoDirty=true; if(!e.shiftKey) placing=null; return; }
@@ -1819,7 +1877,7 @@ window.addEventListener('keydown',e=>{
   const mod=e.metaKey||e.ctrlKey;
   if(mod&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); if(e.shiftKey) doRedo(); else doUndo(); return; }
   if(mod&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); doRedo(); return; }
-  if(e.key==='Escape'){ placing=null; wireFrom=null; setMeterMode(false); }
+  if(e.key==='Escape'){ placing=null; wireFrom=null; setInst('meter',false); }   // Esc 收起万用表面板/探针
   if((e.key==='r'||e.key==='R')){
     if(placing) placingRot^=1;
     else if(propsTarget&&propsTarget.type&&!DIGI_SET.has(propsTarget.type)&&propsTarget.type!=='IC'&&propsTarget.type!=='MCU'){ propsTarget.rot^=1; topoDirty=true; }
@@ -2099,7 +2157,98 @@ function setMeterMode(on){
   document.getElementById('meterBtn').classList.toggle('on',on);
   cv.style.cursor=on?'cell':'crosshair';
 }
-document.getElementById('meterBtn').onclick=()=>setMeterMode(!meterMode);
+/* ================= Multisim 风格仪器面板：XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计 ================= */
+const INST_EL={meter:'instMeter',fg:'instFg',wm:'instWm'}, INST_BTN={meter:'meterBtn',fg:'fgBtn',wm:'wmBtn'};
+let instZ=20, instOpen=false, mmMode='V';
+const instShown=k=>document.getElementById(INST_EL[k]).classList.contains('show');
+const instTarget=()=>{                    // 优先选中元件，其次悬停元件；切换演示后丢弃旧电路里的残留目标
+  const c=(propsTarget&&propsTarget.type)?propsTarget:hoverC;
+  return (c&&comps.includes(c))?c:null;
+};
+function setInst(kind,on){
+  on=(typeof on==='boolean')?on:!instShown(kind);
+  const el=document.getElementById(INST_EL[kind]);
+  el.classList.toggle('show',on); el.style.zIndex=++instZ;
+  if(kind==='meter') setMeterMode(on);                                       // 万用表：面板 = 探针读数
+  else document.getElementById(INST_BTN[kind]).classList.toggle('on',on);
+  instOpen=!!document.querySelector('#instLayer .inst.show');
+  if(on) refreshInst();
+}
+document.getElementById('meterBtn').onclick=()=>setInst('meter');
+document.getElementById('fgBtn').onclick=()=>setInst('fg');
+document.getElementById('wmBtn').onclick=()=>setInst('wm');
+document.getElementById('mmModes').addEventListener('click',e=>{
+  const b=e.target.closest('.mbtn'); if(!b) return;
+  mmMode=b.dataset.m; document.querySelectorAll('#mmModes .mbtn').forEach(x=>x.classList.toggle('on',x===b));
+  refreshInst();
+});
+/* 拖动面板：标题栏按下 → 转为 left/top 绝对定位，限制在画布内 */
+document.querySelectorAll('#instLayer .inst').forEach(el=>{
+  el.querySelector('.instX').onclick=()=>setInst(el.dataset.kind,false);
+  el.querySelector('.instHead').addEventListener('mousedown',e=>{
+    if(e.target.closest('.instX')) return;
+    const layer=document.getElementById('instLayer').getBoundingClientRect(), r=el.getBoundingClientRect();
+    const ox=r.left-layer.left, oy=r.top-layer.top;
+    el.style.left=ox+'px'; el.style.top=oy+'px'; el.style.right='auto'; el.style.bottom='auto'; el.style.zIndex=++instZ;
+    const mv=ev=>{
+      el.style.left=Math.min(Math.max(0,ox+ev.clientX-e.clientX),layer.width-el.offsetWidth)+'px';
+      el.style.top =Math.min(Math.max(0,oy+ev.clientY-e.clientY),layer.height-el.offsetHeight)+'px';
+    };
+    const up=()=>{ window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); };
+    window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up); e.preventDefault();
+  });
+});
+function resOf(c){
+  const t=c.type;
+  if(t==='R') return fmtR(c.val);
+  if(t==='POT') return fmtR(Math.max(10,c.rmax*c.ratio/100));
+  if(t==='LDR') return fmtR(c._r||ldrR(c));
+  if(t==='NTC') return fmtR(c._r||ntcR(c));
+  if(t==='RELAY') return fmtR(c.rcoil);
+  return '—';                                        // 非线性/数字件不报电阻
+}
+function fgSrc(){ return (propsTarget&&propsTarget.type==='VAC')?propsTarget:(comps.find(c=>c.type==='VAC')||null); }
+function refreshFg(){
+  const s=fgSrc(), ids=['fgWave','fgFreq','fgAmp','fgOff'];
+  document.getElementById('fgTarget').textContent = s?`绑定：交流源 #${s.id}（选中其它交流源可切换）`:'先放置交流/方波源';
+  if(!s) return;
+  const [w,f,a,o]=ids.map(id=>document.getElementById(id));
+  if(document.activeElement!==w) w.value=s.wave;
+  if(document.activeElement!==f) f.value=s.freq;
+  if(document.activeElement!==a) a.value=s.amp;
+  if(document.activeElement!==o) o.value=s.offset;
+}
+document.getElementById('fgWave').onchange=e=>{ const s=fgSrc(); if(s) s.wave=e.target.value; };
+[['fgFreq','freq',true],['fgAmp','amp',false],['fgOff','offset',false]].forEach(([id,key,pos])=>{
+  document.getElementById(id).oninput=e=>{
+    const s=fgSrc(), v=parseFloat(e.target.value);
+    if(s&&isFinite(v)&&(!pos||v>0)) s[key]=v;      // 频率必须为正
+  };
+});
+function refreshInst(){
+  const c=instTarget();
+  if(instShown('meter')){
+    let txt='—';
+    if(c){
+      const v=compV(c), i=Math.abs(c.cur||0);
+      txt = mmMode==='V' ? fmtSI(v,'V') : mmMode==='A' ? fmtSI(i,'A')
+          : mmMode==='P' ? fmtSI(Math.abs(v*i),'W') : resOf(c);
+    }
+    document.getElementById('mmVal').textContent=txt;
+    document.getElementById('mmName').textContent = c
+      ? DEF[c.type].name+(c.type==='IC'?' '+c.kind:'')+' · '+({V:'电压',A:'电流',P:'功率',R:'电阻'})[mmMode]
+      : '悬停或点击元件测量';
+  }
+  if(instShown('wm')){
+    const v=c?compV(c):0, i=c?Math.abs(c.cur||0):0;
+    document.getElementById('wmP').textContent = c?fmtSI(Math.abs(v*i),'W'):'—';
+    document.getElementById('wmVI').textContent = c?('V '+fmtSI(v,'V')+' · I '+fmtSI(i,'A')):'V — · I —';
+    const pf = !c ? '—' : (['C','L'].includes(c.type) ? '0.00（无功）' : '1.00');
+    document.getElementById('wmPF').textContent='PF '+pf;
+    document.getElementById('wmName').textContent = c ? '目标：'+DEF[c.type].name : '悬停或点击元件测量';
+  }
+  if(instShown('fg')) refreshFg();
+}
 
 /* ---- 单步推进：暂停时按一次 = 运行模式下一帧的仿真量（50×speed 个时间步）---- */
 function stepFrame(){
@@ -2343,14 +2492,14 @@ setInterval(saveLocal,3000);        // 每 3 秒自动存一份
 /* ================= 元件库（分组） ================= */
 const IC_ICON='M-11 -9 h22 v18 h-22 z M-6 -4 h10 M-6 0 h10 M-6 4 h10';
 const PAL=[
-  {g:'电源 / 无源'},
+  {g:'电源 + 基本 · Sources / Basic'},
   ['V','M-9 0 A9 9 0 1 0 9 0 A9 9 0 1 0 -9 0 M-3 -4 h6 M0 -7 v6 M-3 5 h6'],
   ['VAC','M-9 0 A9 9 0 1 0 9 0 A9 9 0 1 0 -9 0 M-5 0 q2.5 -6 5 0 q2.5 6 5 0'],
   ['R','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5'],
   ['POT','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M0 -2 l0 -6 m-2 2 l2 -2 l2 2'],
   ['C','M-2 -8 v16 M2 -8 v16 M-14 0 h12 M2 0 h12'],
   ['L','M-14 0 a4 4 0 0 1 8 0 a4 4 0 0 1 8 0 a4 4 0 0 1 8 0'],
-  {g:'半导体 / 开关'},
+  {g:'二极管 + 晶体管 · Diodes / Transistors'},
   ['D','M-6 -7 v14 l12 -7 z M8 -7 v14'],
   ['LED','M-6 -7 v14 l12 -7 z M8 -7 v14 M2 -9 l5 -5 m0 3 l-3 -3'],
   ['NPN','M-9 0 h7 M-2 -9 v18 M-2 -4 l9 -7 M-2 4 l9 7'],
@@ -2360,7 +2509,7 @@ const PAL=[
   ['OPAMP','M-9 -10 l18 10 l-18 10 z'],
   ['SW','M-12 0 h4 m16 0 h-4 m-12 0 l10 -8'],
   ['GND','M0 -8 v6 M-9 0 h18 M-5 4 h10 M-2 8 h4'],
-  {g:'基础数字逻辑'},
+  {g:'数字逻辑 · TTL / CMOS'},
   ['AND','M-11 -8 h7 a8 8 0 0 1 0 16 h-7 z'],
   ['OR','M-12 -8 q5 8 0 16 q9 0 19 -8 q-10 -8 -19 -8 z'],
   ['XOR','M-8 -8 q5 8 0 16 q9 0 19 -8 q-10 -8 -19 -8 z M-14 -8 q5 8 0 16'],
@@ -2370,7 +2519,7 @@ const PAL=[
   ['IN','M-9 -9 h18 v18 h-18 z M-4 4 l8 -8'],
   ['PROBE','M-8 0 a8 8 0 1 0 .1 0'],
   ['SEG7','M-8 -10 h16 v20 h-16 z M-4 -5 h8 M-4 0 h8 M-4 5 h8'],
-  {g:'集成电路 7400 / 4000'},
+  {g:'集成电路 · TTL 7400 / CMOS 4xxx'},
   ['IC:7400',IC_ICON,'7400 与非'],
   ['IC:7408',IC_ICON,'7408 与'],
   ['IC:7432',IC_ICON,'7432 或'],
@@ -2404,10 +2553,10 @@ const PAL=[
   ['IC:74157',IC_ICON,'74157 四2选1'],
   ['IC:74393',IC_ICON,'74393 双计数'],
   ['IC:74163',IC_ICON,'74163 同步计数'],
-  {g:'微控制器'},
+  {g:'微控制器 · MCU'},
   ['MCU','M-10 -9 h20 v18 h-20 z M-4 -5 h8 M-4 0 h8 M-4 5 h8','MCU 8 位'],
   ['T555','M-13 -9 h26 v18 h-26 z M-8 -4 h8 M-8 1 h12 M-8 6 h6','555 定时器'],
-  {g:'传感器 / 机电'},
+  {g:'传感器 + 机电 · Analog / Electromechanical'},
   ['LDR','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M3 -9 l4 4 m0 -2.5 l-2.5 2.5 M9 -9 l4 4 m0 -2.5 l-2.5 2.5','光敏电阻'],
   ['NTC','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M-8 8 l16 -16','热敏电阻'],
   ['RELAY','M-15 -7 h9 v14 h-9 z M0 0 h5 M9 5 h5 M9 5 l5 -10','继电器'],
@@ -2497,6 +2646,7 @@ function demoBridge(){
   C('GND',60,260);
   // AC_A 列 x=160 / AC_B 列 x=440
   W(60,120,160,120); W(160,100,160,180);          // 源上端 → AC_A
+  W(160,100,160,120); W(440,200,440,220);         // 接头：让源端点落在竖线端点上（并查集只认端点）
   W(60,200,440,200);                              // 源下端 → AC_B
   W(440,100,440,220);                             // AC_B 列
   // D1：阳极→AC_A
@@ -2513,6 +2663,7 @@ function demoBridge(){
   W(60,260,200,260); W(200,260,360,260); W(360,260,560,260);
   // PLUS → 电容/负载
   W(520,60,610,60); W(560,60,560,90); W(610,60,610,90);
+  W(520,60,560,60);                       // 接头：电容上端接到 PLUS 轨端点
   W(560,170,560,260); W(610,170,610,260); W(560,260,610,260);
   topoDirty=true;
   const cap=comps.find(c=>c.type==='C');
