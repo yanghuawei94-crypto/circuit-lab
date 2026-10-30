@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M7 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、74xx/4xxx 系列集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066）与 8 位 MCU 脚本仿真，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示。">
-<title>M7 · 电路实验室</title>
+<meta name="description" content="M8 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、74xx/4xxx 系列集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066）与 8 位 MCU 脚本仿真，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，新增并查集节点分析可视化。">
+<title>M8 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -39,11 +39,23 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 #scope{display:block;width:100%;height:100%;}
 #scopeTitle{position:absolute;top:6px;left:12px;font-size:11px;color:#8fa3c8;}
 #scopeCh{position:absolute;top:6px;right:12px;font-size:11px;text-align:right;line-height:1.6;max-width:calc(100% - 150px);}
+#netPanel{position:absolute;top:10px;right:10px;width:min(360px,72%);max-height:calc(100% - 20px);display:flex;flex-direction:column;background:rgba(255,255,255,.96);border:1px solid var(--rule);border-radius:10px;box-shadow:0 4px 16px rgba(23,32,42,.12);font-size:12px;z-index:5;}
+#netHead{flex:0 0 auto;padding:8px 10px;font-weight:600;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:6px;white-space:nowrap;}
+#netClose{margin-left:auto;border:none;background:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 6px;border-radius:6px;}
+#netClose:hover{background:#f0f2f7;color:var(--ink);}
+#netHint{flex:0 0 auto;padding:4px 10px;color:var(--muted);border-bottom:1px solid var(--rule);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#netForest{flex:1;min-height:0;overflow-y:auto;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;}
+.netTree{border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;}
+.netTree.g0{grid-column:1/-1;}
+.netTitle{padding:4px 8px;border-left:4px solid;font-weight:600;display:flex;align-items:center;gap:6px;background:var(--bg);white-space:nowrap;}
+.netTitle b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;}
+.netDot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;}
+.netMem{padding:6px 8px;color:var(--muted);line-height:1.7;word-break:break-all;}
 </style>
 </head>
 <body>
 <div id="topbar">
-  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M7</span></b>
+  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M8</span></b>
   <button class="tbtn on" id="runBtn">⏸ 暂停</button>
   <button class="tbtn" id="demoBtn">🌉 桥式整流</button>
   <button class="tbtn" id="demoCntBtn">🔢 4位计数器</button>
@@ -52,6 +64,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
   <button class="tbtn" id="demoOpBtn">🎚 运放放大</button>
   <button class="tbtn" id="demo555Btn">🕒 555 闪烁</button>
   <button class="tbtn" id="demoIcBtn">🧩 4017 流水灯</button>
+  <button class="tbtn" id="netBtn" title="显示/隐藏并查集节点分析面板">🌲 节点分析</button>
   <button class="tbtn" id="clearBtn">🗑 清空</button>
   <button class="tbtn" id="undoBtn" title="撤销 (Ctrl+Z)">撤销</button>
   <button class="tbtn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">重做</button>
@@ -68,7 +81,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </div>
 <div id="main">
   <div id="palette"><h4>元件库</h4></div>
-  <div id="cvWrap"><canvas id="cv"></canvas></div>
+  <div id="cvWrap"><canvas id="cv"></canvas><div id="netPanel" style="display:none"></div></div>
   <div id="props"><h4>属性</h4><div id="propsBody"><p style="color:var(--muted);font-size:12px">点击画布中的元件查看/修改参数</p></div>
     <div class="help">
       · 左侧点元件 → 画布点击放置（Shift 连续放）<br>
@@ -77,6 +90,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
       · 双击开关切换通/断<br>
       · 单击选中元件进示波器；<span class="kbd">Shift+点击</span> 追加通道（最多 4 路）<br>
       · 黄点 = 电流方向与大小<br>
+      · 🌲 节点分析 = 并查集分组的节点森林（同色同节点）<br>
       · <span class="kbd">Ctrl+Z</span> 撤销 · <span class="kbd">Ctrl+Shift+Z</span> 重做<br>
       · 💾 保存到本机，⬇ 导出 JSON 换设备
     </div>
@@ -363,7 +377,7 @@ function mcuExec(c,h){
 const keyOf = p => Math.round(p.x/GRID)+','+Math.round(p.y/GRID);
 
 /* ================= 节点并查集 ================= */
-let nodeOf = new Map(), nNodes = 1;
+let nodeOf = new Map(), nNodes = 1, netInfo = null;   // netInfo：并查集快照，供节点分析面板重建森林
 function buildNodes(){
   const parent = new Map();
   const find = k => { let r=k; while(parent.get(r)!==r) r=parent.get(r); return r; };
@@ -382,6 +396,7 @@ function buildNodes(){
     if(!nodeOf.has(r)) nodeOf.set(r,nNodes++);
     nodeOf.set(k,nodeOf.get(r));
   }
+  netInfo = {parent, keys, g0};   // parent/keys 为本次新建的局部对象，直接存引用即可
 }
 const nodeAt = p => nodeOf.get(keyOf(p)) ?? 0;
 const nOf = c => pinsOf(c).map(nodeAt);
@@ -752,6 +767,7 @@ function draw(){
     }
   }
   for(const c of comps) drawComp(c);
+  if(netMode) drawNetPins();
   if(placing){ ctx.globalAlpha=.55; drawComp(placeComp(mouse.x,mouse.y,placingRot)); ctx.globalAlpha=1; }
   if(wireFrom){
     ctx.beginPath(); ctx.moveTo(wireFrom.x,wireFrom.y); ctx.lineTo(mouse.x,mouse.y);
@@ -1022,7 +1038,7 @@ function drawScope(){
 
 /* ================= 主循环 ================= */
 function tick(){
-  if(topoDirty){ buildNodes(); nodeV=[]; topoDirty=false; }
+  if(topoDirty){ buildNodes(); nodeV=[]; topoDirty=false; if(netMode) renderNetPanel(); }
   if(running){
     const total=50*speed, every=Math.max(1,Math.round(2e-3/DT));   // 每 2ms 采一点
     chTs=every*DT;
@@ -1191,6 +1207,7 @@ function showProps(){
   g('delB').onclick=()=>{ pushUndo(); comps=comps.filter(x=>x!==c); selComps=selComps.filter(x=>x!==c); propsTarget=null; showProps(); topoDirty=true; };
 }
 setInterval(()=>{   // 属性面板实时刷新
+  if(netMode) refreshNetVoltages();
   const rt=document.getElementById('rt');
   if(!rt||!propsTarget||!propsTarget.type) return;
   const c=propsTarget;
@@ -1207,6 +1224,86 @@ setInterval(()=>{   // 属性面板实时刷新
   }
   rt.textContent=txt;
 },300);
+
+/* ================= M8 节点分析（并查集森林可视化） ================= */
+let netMode = false;
+/* 节点调色板：节点 0（地）固定绿色，其余按编号循环取色 */
+const NET_GND = '#16a34a';
+const NET_COLORS = ['#e11d48','#7c3aed','#0891b2','#d97706','#db2777','#4f46e5','#65a30d','#0d9488','#dc2626','#9333ea','#ea580c','#2563eb'];
+const netColor = n => n===0 ? NET_GND : NET_COLORS[(n-1)%NET_COLORS.length];
+/* 各类元件引脚名（与 pinsOf 返回顺序一一对应；IC/MCU 另用真实引脚名） */
+const PIN_NAMES = {
+  V:['+','−'], VAC:['+','−'], R:['1','2'], POT:['1','2'], C:['1','2'], L:['1','2'],
+  D:['阳','阴'], LED:['阳','阴'], SW:['1','2'], GND:['⏚'],
+  AND:['A','B','出'], OR:['A','B','出'], XOR:['A','B','出'], NOT:['入','出'],
+  TFF:['CLK','Q','Q̄'], CLK:['出'], IN:['出'], PROBE:['入'], SEG7:['A','B','C','D'],
+  NPN:['B','C','E'], PNP:['B','C','E'], NMOS:['G','D','S'], PMOS:['G','D','S'],
+  OPAMP:['IN−','IN+','OUT'], T555:['TRIG','THR','DIS','VCC','OUT','GND'],
+};
+/* key -> 友好标签列表（同一网格点可能叠多个引脚，如"4017·GND"与"导线端点"） */
+function pinLabelMap(){
+  const map = new Map();
+  for(const c of comps){
+    const ps = pinsOf(c);
+    const base = c.type==='MCU' ? 'MCU' : (c.type==='IC' ? c.kind : DEF[c.type].name);
+    ps.forEach((p,i)=>{
+      const k = keyOf(p);
+      let pn;
+      if(c.type==='IC'||c.type==='MCU') pn = icPins(c)[i].nm;
+      else pn = (PIN_NAMES[c.type]||[])[i] ?? (i+1);
+      if(!map.has(k)) map.set(k,[]);
+      map.get(k).push(`${base}·${pn}`);
+    });
+  }
+  return map;
+}
+/* 画布层：给每个引脚画节点颜色圆点（同色 = 同一节点） */
+function drawNetPins(){
+  for(const c of comps) for(const p of pinsOf(c)){
+    ctx.beginPath(); ctx.arc(p.x,p.y,4.5,0,7);
+    ctx.fillStyle = netColor(nodeAt(p)); ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+  }
+}
+/* 面板层：用 buildNodes 存的 netInfo 快照重建森林（结构变化时整棵重建） */
+function renderNetPanel(){
+  const el = document.getElementById('netPanel');
+  if(!netInfo){ el.innerHTML=''; return; }
+  const {parent, keys, g0} = netInfo;
+  const find = k => { let r=k; while(parent.get(r)!==r) r=parent.get(r); return r; };
+  const groups = new Map();                       // 根 -> [key...]
+  for(const k of keys){
+    const r = find(k);
+    if(!groups.has(r)) groups.set(r,[]);
+    groups.get(r).push(k);
+  }
+  const labels = pinLabelMap();
+  const trees = [...groups.entries()].map(([r,ks])=>({n: r===g0 ? 0 : nodeOf.get(r), ks}))
+    .sort((a,b)=>a.n-b.n);
+  let h = `<div id="netHead">🌲 节点分析 · ${trees.length} 个节点 · ${keys.length} 个端点<button id="netClose">✕</button></div>
+    <div id="netHint">同一颜色 = 同一节点（电气连通） · 节点 0 = 地</div><div id="netForest">`;
+  for(const t of trees){
+    const col = netColor(t.n);
+    const mem = t.ks.flatMap(k=>labels.get(k)||[k]);
+    h += `<div class="netTree${t.n===0?' g0':''}"><div class="netTitle" style="border-color:${col}"><span class="netDot" style="background:${col}"></span>节点 ${t.n}${t.n===0?'（地）':''}<b class="netV" data-n="${t.n}">${fmtNodeV(t.n)}</b></div><div class="netMem">${mem.join('、')}</div></div>`;
+  }
+  el.innerHTML = h + '</div>';
+  document.getElementById('netClose').onclick = ()=>setNetMode(false);
+}
+function fmtNodeV(n){ const v=n===0?0:(nodeV[n-1]||0); return (Math.abs(v)<0.005?'0.00':v.toFixed(2))+' V'; }
+/* 轻量刷新：仿真推进时只更新电压文字，不重建 DOM（防面板跳动） */
+function refreshNetVoltages(){
+  document.querySelectorAll('#netPanel .netV').forEach(el=>{ el.textContent = fmtNodeV(+el.dataset.n); });
+}
+function setNetMode(on){
+  netMode = on;
+  document.getElementById('netBtn').classList.toggle('on', on);
+  const el = document.getElementById('netPanel');
+  el.style.display = on ? '' : 'none';
+  if(on) renderNetPanel();
+}
+document.getElementById('netBtn').onclick = ()=>setNetMode(!netMode);
+
 /* BJT 工作区判断：Vbc 正偏→饱和，Vbe 未导通→截止，其余→放大 */
 function bjtRegion(c){
   const vbe=c._vbe||0, vbc=c._vbc||0;
