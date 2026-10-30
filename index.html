@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M14 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组。">
-<title>M14 · 电路实验室</title>
+<meta name="description" content="M15 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）。">
+<title>M15 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -133,10 +133,12 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 .inst .fld{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;}
 .inst .fld label{font-size:10px;color:#3a3a3a;}
 .inst .fld input,.inst .fld select{width:96px;padding:2px 5px;border:1px solid #9d9997;border-radius:3px;font-size:10px;background:#fbfaf9;color:#222;}
+.inst.instWide{width:262px;}
+.instBody canvas{display:block;width:100%;height:auto;background:linear-gradient(#10231a,#08130d);border:1px solid #3c4a41;border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.6);}
 </style>
 </head>
 <body>
-<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M14</span></div>
+<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M15</span></div>
 <div id="topbar">
   <div class="tgrp">
     <button class="tbtn" id="libBtn" title="打开元件库（L）"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/><path d="M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3"/></svg><span>元件库</span></button>
@@ -175,6 +177,8 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
     <button class="tbtn" id="meterBtn" title="万用表面板 XMM1：悬停/选点读电压、电流、功率、电阻"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12l5-4"/></svg><span>万用表</span></button>
     <button class="tbtn" id="fgBtn" title="函数发生器 XFG1：设置波形/频率/幅值/偏置"><svg viewBox="0 0 24 24"><path d="M2 12c2 0 2-7 5-7s3 14 5 14 3-7 5-7 2 7 5 7"/></svg><span>信号源</span></button>
     <button class="tbtn" id="wmBtn" title="瓦特计 XWM1：读电压/电流/功率/功率因数"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12l4-5 M6 20h12"/></svg><span>瓦特计</span></button>
+    <button class="tbtn" id="bodeBtn" title="波特图仪 XBP1：20 Hz–5 kHz 扫描，测幅频与相频（IN=交流源，OUT=选中元件）"><svg viewBox="0 0 24 24"><path d="M2 17c3 0 4-11 8-11s3 11 6 11 2-5 6-5"/></svg><span>波特图</span></button>
+    <button class="tbtn" id="logicBtn" title="逻辑分析仪 XLA1：自动抓取 8 个高低翻转节点的时序"><svg viewBox="0 0 24 24"><path d="M2 16h4V8h4v8h4V8h4v8h4"/><path d="M2 20h20" stroke-dasharray="3 3"/></svg><span>逻辑分析</span></button>
     <button class="tbtn" id="netBtn" title="显示/隐藏并查集节点分析面板"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 6h8 M18 8v8 M8 6l8 10"/></svg><span>节点</span></button>
   </div>
   <span class="sep"></span>
@@ -219,6 +223,21 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
           <div class="instFoot" id="wmName">悬停或点击元件测量</div>
         </div>
       </div>
+      <div class="inst instWide" id="instBode" data-kind="bode" style="left:452px;bottom:14px;z-index:20">
+        <div class="instHead"><span>XBP1 · 波特图仪</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instBody">
+          <canvas id="bpCv" width="504" height="196"></canvas>
+          <div class="instRow"><button class="mbtn" id="bpRun">扫描 20 Hz – 5 kHz</button></div>
+          <div class="instFoot" id="bpInfo">IN=交流源，OUT=选中元件</div>
+        </div>
+      </div>
+      <div class="inst" id="instLogic" data-kind="logic" style="left:238px;bottom:172px;z-index:20">
+        <div class="instHead"><span>XLA1 · 逻辑分析仪</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instBody">
+          <canvas id="laCv" width="392" height="196"></canvas>
+          <div class="instFoot" id="laInfo">自动抓取 8 个高低翻转节点（阈值 1.5 V）</div>
+        </div>
+      </div>
     </div>
   </div>
   <div id="props"><h4 id="propsTitle">电路</h4><div id="propsBody"><p style="color:#666;font-size:12px;padding:10px">点击画布中的元件查看/修改参数</p></div>
@@ -233,6 +252,8 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
       · 万用表 XMM1：悬停/选点读 V·A·P·Ω，<span class="kbd">Esc</span> 退出<br>
       · 信号源 XFG1：改波形/频率/幅值/偏置（绑定选中的交流源）<br>
       · 瓦特计 XWM1：V·I·P·PF；三台仪器面板可拖动<br>
+      · 波特图 XBP1：先选中输出元件，再点「扫描」测 20Hz–5kHz 幅频/相频<br>
+      · 逻辑分析 XLA1：自动抓 8 个高低翻转节点，800ms 时序窗口<br>
       · 单步：暂停后逐帧推进；⚠ = 过流/超功率<br>
       · IC ×33：74192/74193/74273/74157/74393/74163 等<br>
       · 机电：直流电机 · 舵机 · 按钮 · 拨动开关<br>
@@ -860,6 +881,8 @@ const nOf = c => pinsOf(c).map(nodeAt);
 
 /* ================= MNA 引擎（M1 内核 + 非线性迭代） ================= */
 const DT = 1e-4, VT = 25.85e-3;
+let DT_SWEEP = 0;                        // 波特图扫描期间临时步长（0 = 用默认 DT）
+const dtNow = () => DT_SWEEP || DT;
 const srcVal = c => {
   if(c.type==='V') return c.val;
   const ph = 2*Math.PI*c.freq*simTime;
@@ -1019,11 +1042,11 @@ function assembleSolve(){
     else if(c.type==='POT'){ const r=Math.max(10, c.rmax*c.ratio/100); gS(a,bn,1/r); c._r=r; }
     else if(c.type==='SW'||c.type==='BTN') gS(a,bn,c.closed?100:1e-9);
     else if(c.type==='C'){
-      const G=2*c.val/DT, I=-G*c.vp-c.ip;
+      const G=2*c.val/dtNow(), I=-G*c.vp-c.ip;
       gS(a,bn,G); iS(a,bn,I); c._G=G; c._I=I;
     }
     else if(c.type==='L'){
-      const G=DT/(2*c.val), I=c.ip+G*c.vp;
+      const G=dtNow()/(2*c.val), I=c.ip+G*c.vp;
       gS(a,bn,G); iS(a,bn,I); c._G=G; c._I=I;
     }
     else if(c.type==='D'){
@@ -1215,9 +1238,9 @@ function stepOnce(){
       const ra=Math.max(0.1,c.ra||5), ke=c.ke||0.02;
       c.cur=(v-(c._e||0))/ra;
       const J=Math.max(1e-7,c.j||1e-5), B=Math.max(0,c.bf==null?1e-4:c.bf);
-      let w=(c._w||0)+(ke*c.cur-B*(c._w||0))/J*DT;
+      let w=(c._w||0)+(ke*c.cur-B*(c._w||0))/J*dtNow();
       if(!isFinite(w)) w=0;
-      c._w=w; c._e=ke*w; c._th=(c._th||0)+w*DT;   // 反电动势与转子角供下一步/绘制
+      c._w=w; c._e=ke*w; c._th=(c._th||0)+w*dtNow();   // 反电动势与转子角供下一步/绘制
     }
     else if(c.type==='SERVO') c.cur=v*(c._moving?1/60:1/1000);   // 舵机电源电流（跟随上一步负载档）
     else if(c.type==='LAMP'){                    // 灯泡：功率→亮度，热态阻值随功率上升
@@ -1266,7 +1289,7 @@ function stepOnce(){
       }
       c._sigPrev=hi;
       const tgt=c._pw>0?Math.max(0,Math.min(180,(c._pw-1)*180)):90;
-      const ang=c._ang==null?90:c._ang, d=tgt-ang, mx=360*DT;  // 360°/s 舵机速度限制
+      const ang=c._ang==null?90:c._ang, d=tgt-ang, mx=360*dtNow();  // 360°/s 舵机速度限制
       c._moving=Math.abs(d)>0.5;
       c._ang=c._moving?ang+Math.sign(d)*Math.min(Math.abs(d),mx):ang;
       continue;
@@ -1285,7 +1308,7 @@ function stepOnce(){
       c._ins=INIDX[c.type].map(pi=>ps[pi]>0?x[ps[pi]-1]:0);
     }
   }
-  simTime+=DT;
+  simTime+=dtNow();
 }
 function compV(c){
   if(c.type==='GND') return 0;
@@ -1795,8 +1818,11 @@ function tick(){
   if(running){
     const total=50*speed, every=Math.max(1,Math.round(2e-3/DT));   // 每 2ms 采一点
     chTs=every*DT;
+    const laOn = instOpen && instShown('logic');
+    if(laOn && nNodes!==laNodes) laReset();
     for(let k=0;k<total;k++){
       stepOnce();
+      if(laOn && simTime>=laNext) laPush();          // 逻辑分析仪：每 2 ms 仿真时间采一点
       if((k+1)%every===0) for(const c of selComps){
         if(!chBuf.has(c.id)) chBuf.set(c.id,[]);
         const b2=chBuf.get(c.id); b2.push(compV(c)); if(b2.length>1500) b2.shift();
@@ -2158,7 +2184,8 @@ function setMeterMode(on){
   cv.style.cursor=on?'cell':'crosshair';
 }
 /* ================= Multisim 风格仪器面板：XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计 ================= */
-const INST_EL={meter:'instMeter',fg:'instFg',wm:'instWm'}, INST_BTN={meter:'meterBtn',fg:'fgBtn',wm:'wmBtn'};
+const INST_EL={meter:'instMeter',fg:'instFg',wm:'instWm',bode:'instBode',logic:'instLogic'},
+      INST_BTN={meter:'meterBtn',fg:'fgBtn',wm:'wmBtn',bode:'bodeBtn',logic:'logicBtn'};
 let instZ=20, instOpen=false, mmMode='V';
 const instShown=k=>document.getElementById(INST_EL[k]).classList.contains('show');
 const instTarget=()=>{                    // 优先选中元件，其次悬停元件；切换演示后丢弃旧电路里的残留目标
@@ -2171,12 +2198,15 @@ function setInst(kind,on){
   el.classList.toggle('show',on); el.style.zIndex=++instZ;
   if(kind==='meter') setMeterMode(on);                                       // 万用表：面板 = 探针读数
   else document.getElementById(INST_BTN[kind]).classList.toggle('on',on);
+  if(kind==='logic'&&on) laReset();                                          // 逻辑分析仪：打开时清空时序缓冲
   instOpen=!!document.querySelector('#instLayer .inst.show');
   if(on) refreshInst();
 }
 document.getElementById('meterBtn').onclick=()=>setInst('meter');
 document.getElementById('fgBtn').onclick=()=>setInst('fg');
 document.getElementById('wmBtn').onclick=()=>setInst('wm');
+document.getElementById('bodeBtn').onclick=()=>setInst('bode');
+document.getElementById('logicBtn').onclick=()=>setInst('logic');
 document.getElementById('mmModes').addEventListener('click',e=>{
   const b=e.target.closest('.mbtn'); if(!b) return;
   mmMode=b.dataset.m; document.querySelectorAll('#mmModes .mbtn').forEach(x=>x.classList.toggle('on',x===b));
@@ -2248,7 +2278,153 @@ function refreshInst(){
     document.getElementById('wmName').textContent = c ? '目标：'+DEF[c.type].name : '悬停或点击元件测量';
   }
   if(instShown('fg')) refreshFg();
+  if(instShown('logic')) drawLa();
+  if(instShown('bode')) drawBode();
 }
+
+/* ================= XLA1 逻辑分析仪：抓取节点高低翻转（阈值 1.5 V） ================= */
+const LA_LEN=400, LA_DT=2e-3;                 // 400 点 × 2 ms = 800 ms 窗口
+let laNodes=0, laBuf=[], laWr=0, laNext=0;
+function laReset(){
+  laNodes=nNodes; laBuf=[]; laWr=0; laNext=simTime+LA_DT;
+  for(let i=1;i<laNodes;i++) laBuf[i]=new Uint8Array(LA_LEN);
+}
+function laPush(){                            // 采样一次节点电平（0/1）
+  if(nNodes!==laNodes) laReset();
+  for(let i=1;i<laNodes;i++){ const b=laBuf[i]; if(b) b[laWr]=(nodeV[i-1]||0)>1.5?1:0; }
+  laWr=(laWr+1)%LA_LEN; laNext=simTime+LA_DT;
+}
+function laChannels(){                        // 取翻转次数最多的 8 个节点
+  const out=[];
+  for(let i=1;i<laNodes;i++){
+    const b=laBuf[i]; if(!b) continue;
+    let t=0; for(let k=1;k<LA_LEN;k++) if(b[k]!==b[k-1]) t++;
+    if(b[0]!==b[LA_LEN-1]) t++;
+    if(t>0) out.push({n:i,t});
+  }
+  out.sort((a,b)=>b.t-a.t);
+  return out.slice(0,8);
+}
+function drawLa(){
+  const c=document.getElementById('laCv'); if(!c) return;
+  const g=c.getContext('2d'), W=c.width, H=c.height;
+  g.fillStyle='#08130d'; g.fillRect(0,0,W,H);
+  const chs=laChannels(), rowH=H/8, labW=42;
+  g.font='11px Menlo,monospace'; g.textAlign='left'; g.textBaseline='alphabetic';
+  document.getElementById('laInfo').textContent =
+    chs.length ? `抓取 ${chs.length} 个翻转节点（阈值 1.5 V · 窗口 ${(LA_LEN*LA_DT*1000).toFixed(0)} ms）`
+               : '暂无翻转节点（阈值 1.5 V）';
+  if(!chs.length){
+    g.fillStyle='#57e88f'; g.fillText('等待高低翻转…',10,H/2);
+    return;
+  }
+  chs.forEach((ch,i)=>{
+    const top=i*rowH+4, bot=(i+1)*rowH-4, x0=labW, w=W-labW-8;
+    g.fillStyle='rgba(80,255,140,.10)'; g.fillRect(x0,top,w,bot-top);
+    g.strokeStyle='rgba(80,255,140,.30)'; g.lineWidth=1; g.strokeRect(x0+.5,top+.5,w-1,bot-top-1);
+    g.fillStyle='#8dffb5'; g.fillText('n'+ch.n,6,top+(bot-top)/2+4);
+    g.strokeStyle=CH_COLORS[i%4]; g.lineWidth=2; g.beginPath();
+    let py=null;
+    for(let j=0;j<LA_LEN;j++){
+      const bit=laBuf[ch.n][(laWr+j)%LA_LEN];
+      const x=x0+j/LA_LEN*w, y=bit?top+2:bot-2;
+      if(py===null) g.moveTo(x,y); else { g.lineTo(x,py); g.lineTo(x,y); }
+      py=y;
+    }
+    g.lineTo(x0+w,py); g.stroke();
+  });
+  g.strokeStyle='#3c4a41'; g.lineWidth=1;
+  for(let i=1;i<8;i++){ g.beginPath(); g.moveTo(0,i*rowH+.5); g.lineTo(W,i*rowH+.5); g.stroke(); }
+}
+
+/* ================= XBP1 波特图仪：20 Hz–5 kHz 对数扫描（IN=交流源，OUT=选中元件） ================= */
+let bpData=null, bpBusy=false, bpMsg='';
+const bpSleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function bodeRun(){
+  if(bpBusy) return;
+  const info=document.getElementById('bpInfo');
+  const src=fgSrc(), out=instTarget();
+  if(!src){ bpMsg='先放置交流源 VAC'; bpData=null; drawBode(); info.textContent=bpMsg; return; }
+  if(!out){ bpMsg='先选中/悬停一个元件作为输出端'; bpData=null; drawBode(); info.textContent=bpMsg; return; }
+  bpBusy=true; const wasRun=running; running=false;
+  const N=15, f1=20, f2=5000, oldF=src.freq, oldW=src.wave;
+  const F=[], DB=[], PH=[];
+  try{
+    src.wave='sine'; src.freq=f1;
+    for(let i=0;i<N;i++){
+      const f=f1*Math.pow(f2/f1, i/(N-1));
+      src.freq=f;
+      DT_SWEEP=1/(f*20);                             // 每周期 20 步：与频率无关的固定开销
+      for(let k=0;k<6*20;k++) stepOnce();            // 6 个周期建立稳态
+      let S=0, Cc=0, n=0;
+      for(let k=0;k<3*20;k++){                       // 3 个周期做正交相关测幅值与相位
+        stepOnce();
+        const v=compV(out), th=2*Math.PI*f*simTime;
+        S+=v*Math.sin(th); Cc+=v*Math.cos(th); n++;
+      }
+      const amp=n?2*Math.hypot(S,Cc)/n:0;
+      F.push(f);
+      DB.push(20*Math.log10(Math.max(1e-5, amp/Math.max(1e-9,Math.abs(src.amp)))));
+      PH.push(n?Math.atan2(Cc,S)*180/Math.PI:0);
+      info.textContent=`扫描中 ${Math.round((i+1)/N*100)}% · ${Math.round(f)} Hz`;
+      await bpSleep(0);                              // 让出主线程，保持界面可响应
+    }
+    bpData={f:F,db:DB,ph:PH}; bpMsg='';
+  } catch(err){
+    bpData=null; bpMsg='扫描失败：'+err.message;
+  } finally {
+    DT_SWEEP=0; src.freq=oldF; src.wave=oldW; running=wasRun; bpBusy=false;
+  }
+  drawBode();
+  info.textContent = bpData
+    ? `IN 交流源 #${src.id} · OUT ${DEF[out.type].name} · ${f1}–${f2} Hz`
+    : bpMsg;
+}
+function drawBode(){
+  const c=document.getElementById('bpCv'); if(!c) return;
+  const g=c.getContext('2d'), W=c.width, H=c.height;
+  g.fillStyle='#08130d'; g.fillRect(0,0,W,H);
+  const L=38, R=W-46, T=26, B=H-24;
+  if(!bpData){
+    g.fillStyle='#57e88f'; g.font='12px Menlo,monospace'; g.textAlign='left';
+    g.fillText(bpMsg||'选好输出元件后点“扫描”', 12, H/2);
+    return;
+  }
+  const {f,db,ph}=bpData;
+  let dmax=Math.max.apply(null,db), dmin=Math.min.apply(null,db);
+  dmax=Math.max(6, Math.ceil(dmax/6)*6); dmin=Math.min(-6, Math.floor(dmin/6)*6);
+  if(dmax-dmin<24) dmin=dmax-24;
+  const l1=Math.log10(f[0]), l2=Math.log10(f[f.length-1]);
+  const nx=v=>L+(Math.log10(v)-l1)/(l2-l1)*(R-L);
+  const yb=v=>T+(dmax-v)/(dmax-dmin)*(B-T);
+  g.strokeStyle='rgba(80,255,140,.16)'; g.lineWidth=1; g.font='10px Menlo,monospace';
+  for(let k=0;k<=4;k++){
+    const y=T+(B-T)*k/4;
+    g.beginPath(); g.moveTo(L,y+.5); g.lineTo(R,y+.5); g.stroke();
+    g.fillStyle='#57e88f'; g.textAlign='right';
+    g.fillText((dmax-(dmax-dmin)*k/4).toFixed(0), L-4, y+3);
+  }
+  g.textAlign='center';
+  [10,100,1000,10000].forEach(v=>{
+    if(v<f[0]||v>f[f.length-1]) return;
+    const x=nx(v);
+    g.beginPath(); g.moveTo(x+.5,T); g.lineTo(x+.5,B); g.stroke();
+    g.fillStyle='#57e88f'; g.fillText(v>=1000?(v/1000)+'k':v, x, B+15);
+  });
+  g.strokeStyle='#25e04a'; g.lineWidth=2; g.beginPath();
+  db.forEach((v,i)=>{ const x=nx(f[i]), y=yb(v); i?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke();
+  g.strokeStyle='#4aa8ff'; g.lineWidth=1.6; g.setLineDash([4,3]); g.beginPath();
+  ph.forEach((v,i)=>{ const x=nx(f[i]); const y=T+Math.max(0,Math.min(1,-v/180))*(B-T); i?g.lineTo(x,y):g.moveTo(x,y); });
+  g.stroke(); g.setLineDash([]);
+  let bi=0; db.forEach((v,i)=>{ if(Math.abs(v)>Math.abs(db[bi])) bi=i; });
+  g.textAlign='left'; g.fillStyle='#8dffb5'; g.font='11px Menlo,monospace';
+  g.fillText(`峰值 ${db[bi].toFixed(1)} dB @ ${Math.round(f[bi])} Hz`, L, 17);
+  g.textAlign='right'; g.fillStyle='#7fc4ff';
+  g.fillText('相位 0 → -180°', W-6, 17);
+  g.textAlign='left'; g.fillStyle='#25e04a'; g.fillText('dB', L-30, 17);
+  g.textAlign='left';
+}
+document.getElementById('bpRun').onclick=bodeRun;
 
 /* ---- 单步推进：暂停时按一次 = 运行模式下一帧的仿真量（50×speed 个时间步）---- */
 function stepFrame(){
