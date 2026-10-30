@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M15 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）。">
-<title>M15 · 电路实验室</title>
+<meta name="description" content="M16 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）；仪器三视图切换（面板 → 符号 → 图标，对齐 Multisim Icon/Symbol/Panel），逻辑探针 PROBE 手动接入 XLA1 通道（P1–P4 优先显示）。">
+<title>M16 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -135,10 +135,24 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 .inst .fld input,.inst .fld select{width:96px;padding:2px 5px;border:1px solid #9d9997;border-radius:3px;font-size:10px;background:#fbfaf9;color:#222;}
 .inst.instWide{width:262px;}
 .instBody canvas{display:block;width:100%;height:auto;background:linear-gradient(#10231a,#08130d);border:1px solid #3c4a41;border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.6);}
+/* 仪器三视图：面板（默认）/ 符号（仅标题栏）/ 图标（38×38 小图标），对齐 Multisim 的 Icon–Symbol–Panel */
+.inst .instV{margin-left:auto;border:0;background:none;cursor:pointer;font-size:11px;color:#555;padding:2px 5px;border-radius:3px;line-height:1;}
+.inst .instV:hover{background:rgba(0,0,0,.08);}
+.inst .instX{margin-left:4px;}
+.inst.v-sym .instBody{display:none;}
+.inst.v-icon{width:38px;height:38px;}
+.inst.v-icon .instHead{height:38px;justify-content:center;padding:0;}
+.inst.v-icon .instHead>span,.inst.v-icon .instHead .instX,.inst.v-icon .instHead .instV{display:none;}
+.inst.v-icon .instHead::before{content:'▣';font-size:18px;color:#3a3a3a;}
+.inst[data-kind="meter"].v-icon .instHead::before{content:'V';font-size:16px;font-weight:700;}
+.inst[data-kind="fg"].v-icon .instHead::before{content:'~';font-size:19px;font-weight:700;}
+.inst[data-kind="wm"].v-icon .instHead::before{content:'W';font-size:16px;font-weight:700;}
+.inst[data-kind="bode"].v-icon .instHead::before{content:'dB';font-size:13px;font-weight:700;}
+.inst[data-kind="logic"].v-icon .instHead::before{content:'⊓';font-size:17px;font-weight:700;}
 </style>
 </head>
 <body>
-<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M15</span></div>
+<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M16</span></div>
 <div id="topbar">
   <div class="tgrp">
     <button class="tbtn" id="libBtn" title="打开元件库（L）"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/><path d="M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3"/></svg><span>元件库</span></button>
@@ -194,7 +208,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
   <div id="cvWrap"><canvas id="cv"></canvas><div id="netPanel" style="display:none"></div>
     <div id="instLayer">
       <div class="inst" id="instMeter" data-kind="meter" style="left:14px;bottom:14px;z-index:20">
-        <div class="instHead"><span>XMM1 · 万用表</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instHead"><span>XMM1 · 万用表</span><button class="instV" title="切换视图：面板 → 符号 → 图标">▤</button><button class="instX" title="关闭">✕</button></div>
         <div class="instBody">
           <div class="lcd"><b id="mmVal">—</b></div>
           <div class="instRow" id="mmModes">
@@ -207,7 +221,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
         </div>
       </div>
       <div class="inst" id="instFg" data-kind="fg" style="left:238px;bottom:14px;z-index:20">
-        <div class="instHead"><span>XFG1 · 函数发生器</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instHead"><span>XFG1 · 函数发生器</span><button class="instV" title="切换视图：面板 → 符号 → 图标">▤</button><button class="instX" title="关闭">✕</button></div>
         <div class="instBody">
           <div class="fld"><label>波形</label><select id="fgWave"><option value="sine">正弦</option><option value="square">方波</option></select></div>
           <div class="fld"><label>频率 Hz</label><input id="fgFreq" type="number" min="1" max="20000" step="any"></div>
@@ -217,14 +231,14 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
         </div>
       </div>
       <div class="inst" id="instWm" data-kind="wm" style="left:14px;bottom:172px;z-index:20">
-        <div class="instHead"><span>XWM1 · 瓦特计</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instHead"><span>XWM1 · 瓦特计</span><button class="instV" title="切换视图：面板 → 符号 → 图标">▤</button><button class="instX" title="关闭">✕</button></div>
         <div class="instBody">
           <div class="lcd" style="display:block"><b id="wmP">—</b><div class="lcdSub" id="wmVI">V — · I —</div><div class="lcdSub" id="wmPF">PF —</div></div>
           <div class="instFoot" id="wmName">悬停或点击元件测量</div>
         </div>
       </div>
       <div class="inst instWide" id="instBode" data-kind="bode" style="left:452px;bottom:14px;z-index:20">
-        <div class="instHead"><span>XBP1 · 波特图仪</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instHead"><span>XBP1 · 波特图仪</span><button class="instV" title="切换视图：面板 → 符号 → 图标">▤</button><button class="instX" title="关闭">✕</button></div>
         <div class="instBody">
           <canvas id="bpCv" width="504" height="196"></canvas>
           <div class="instRow"><button class="mbtn" id="bpRun">扫描 20 Hz – 5 kHz</button></div>
@@ -232,7 +246,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
         </div>
       </div>
       <div class="inst" id="instLogic" data-kind="logic" style="left:238px;bottom:172px;z-index:20">
-        <div class="instHead"><span>XLA1 · 逻辑分析仪</span><button class="instX" title="关闭">✕</button></div>
+        <div class="instHead"><span>XLA1 · 逻辑分析仪</span><button class="instV" title="切换视图：面板 → 符号 → 图标">▤</button><button class="instX" title="关闭">✕</button></div>
         <div class="instBody">
           <canvas id="laCv" width="392" height="196"></canvas>
           <div class="instFoot" id="laInfo">自动抓取 8 个高低翻转节点（阈值 1.5 V）</div>
@@ -254,6 +268,8 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
       · 瓦特计 XWM1：V·I·P·PF；三台仪器面板可拖动<br>
       · 波特图 XBP1：先选中输出元件，再点「扫描」测 20Hz–5kHz 幅频/相频<br>
       · 逻辑分析 XLA1：自动抓 8 个高低翻转节点，800ms 时序窗口<br>
+      · 放「逻辑探针 PROBE」→ XLA1 优先显示探针所在节点（P1、P2…）<br>
+      · 面板 ▤ = 三视图：面板 → 符号 → 图标（图标态单击还原）<br>
       · 单步：暂停后逐帧推进；⚠ = 过流/超功率<br>
       · IC ×33：74192/74193/74273/74157/74393/74163 等<br>
       · 机电：直流电机 · 舵机 · 按钮 · 拨动开关<br>
@@ -2192,6 +2208,18 @@ const instTarget=()=>{                    // 优先选中元件，其次悬停�
   const c=(propsTarget&&propsTarget.type)?propsTarget:hoverC;
   return (c&&comps.includes(c))?c:null;
 };
+/* 三视图切换：panel（面板）→ sym（仅符号/标题栏）→ icon（38×38 图标），点击标题栏图标可回到面板 */
+const INST_VIEW=['panel','sym','icon'], instViewOf={};
+function setInstView(kind,next){
+  const el=document.getElementById(INST_EL[kind]), cur=instViewOf[kind]||'panel';
+  const nx=next||INST_VIEW[(INST_VIEW.indexOf(cur)+1)%3];
+  instViewOf[kind]=nx;
+  el.classList.remove('v-sym','v-icon');
+  if(nx!=='panel') el.classList.add('v-'+nx);
+}
+document.querySelectorAll('#instLayer .instV').forEach(b=>{
+  b.onclick=e=>{ e.stopPropagation(); setInstView(b.closest('.inst').dataset.kind); };
+});
 function setInst(kind,on){
   on=(typeof on==='boolean')?on:!instShown(kind);
   const el=document.getElementById(INST_EL[kind]);
@@ -2217,6 +2245,8 @@ document.querySelectorAll('#instLayer .inst').forEach(el=>{
   el.querySelector('.instX').onclick=()=>setInst(el.dataset.kind,false);
   el.querySelector('.instHead').addEventListener('mousedown',e=>{
     if(e.target.closest('.instX')) return;
+    if(el.classList.contains('v-icon')){ setInstView(el.dataset.kind,'panel'); e.preventDefault(); return; }   // 图标态：单击还原面板
+    if(el.classList.contains('v-sym')){ setInstView(el.dataset.kind,'panel'); e.preventDefault(); return; }
     const layer=document.getElementById('instLayer').getBoundingClientRect(), r=el.getBoundingClientRect();
     const ox=r.left-layer.left, oy=r.top-layer.top;
     el.style.left=ox+'px'; el.style.top=oy+'px'; el.style.right='auto'; el.style.bottom='auto'; el.style.zIndex=++instZ;
@@ -2294,16 +2324,23 @@ function laPush(){                            // 采样一次节点电平（0/1�
   for(let i=1;i<laNodes;i++){ const b=laBuf[i]; if(b) b[laWr]=(nodeV[i-1]||0)>1.5?1:0; }
   laWr=(laWr+1)%LA_LEN; laNext=simTime+LA_DT;
 }
-function laChannels(){                        // 取翻转次数最多的 8 个节点
-  const out=[];
+function laChannels(){                        // 手动探针优先，其余按翻转次数补满 8 路
+  const manual=[], used=new Set();
+  for(const c of comps){
+    if(c.type!=='PROBE') continue;
+    const n=nOf(c)[0];
+    if(n>0 && laBuf[n] && !used.has(n)){ used.add(n); manual.push({n, tag:'P'+(manual.length+1), manual:true}); }
+  }
+  const auto=[];
   for(let i=1;i<laNodes;i++){
+    if(used.has(i)) continue;
     const b=laBuf[i]; if(!b) continue;
     let t=0; for(let k=1;k<LA_LEN;k++) if(b[k]!==b[k-1]) t++;
     if(b[0]!==b[LA_LEN-1]) t++;
-    if(t>0) out.push({n:i,t});
+    if(t>0) auto.push({n:i,t});
   }
-  out.sort((a,b)=>b.t-a.t);
-  return out.slice(0,8);
+  auto.sort((a,b)=>b.t-a.t);
+  return manual.concat(auto.slice(0, Math.max(0,8-manual.length)));
 }
 function drawLa(){
   const c=document.getElementById('laCv'); if(!c) return;
@@ -2311,9 +2348,10 @@ function drawLa(){
   g.fillStyle='#08130d'; g.fillRect(0,0,W,H);
   const chs=laChannels(), rowH=H/8, labW=42;
   g.font='11px Menlo,monospace'; g.textAlign='left'; g.textBaseline='alphabetic';
+  const np=chs.filter(c=>c.manual).length;
   document.getElementById('laInfo').textContent =
-    chs.length ? `抓取 ${chs.length} 个翻转节点（阈值 1.5 V · 窗口 ${(LA_LEN*LA_DT*1000).toFixed(0)} ms）`
-               : '暂无翻转节点（阈值 1.5 V）';
+    chs.length ? `抓取 ${chs.length} 路${np?`（手动探针 ${np}）`:''} · 阈值 1.5 V · 窗口 ${(LA_LEN*LA_DT*1000).toFixed(0)} ms`
+               : '暂无翻转节点（放置逻辑探针可指定通道）';
   if(!chs.length){
     g.fillStyle='#57e88f'; g.fillText('等待高低翻转…',10,H/2);
     return;
@@ -2322,7 +2360,7 @@ function drawLa(){
     const top=i*rowH+4, bot=(i+1)*rowH-4, x0=labW, w=W-labW-8;
     g.fillStyle='rgba(80,255,140,.10)'; g.fillRect(x0,top,w,bot-top);
     g.strokeStyle='rgba(80,255,140,.30)'; g.lineWidth=1; g.strokeRect(x0+.5,top+.5,w-1,bot-top-1);
-    g.fillStyle='#8dffb5'; g.fillText('n'+ch.n,6,top+(bot-top)/2+4);
+    g.fillStyle='#8dffb5'; g.fillText(ch.tag||('n'+ch.n),6,top+(bot-top)/2+4);
     g.strokeStyle=CH_COLORS[i%4]; g.lineWidth=2; g.beginPath();
     let py=null;
     for(let j=0;j<LA_LEN;j++){
