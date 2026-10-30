@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M17 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）；仪器三视图切换（面板 → 符号 → 图标，对齐 Multisim Icon/Symbol/Panel），逻辑探针 PROBE 手动接入 XLA1 通道（P1–P4 优先显示）；仪器布局记忆（开关、拖动位置、三视图存本机，刷新后原样恢复）。">
-<title>M17 · 电路实验室</title>
+<meta name="description" content="M18 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）；仪器三视图切换（面板 → 符号 → 图标，对齐 Multisim Icon/Symbol/Panel），逻辑探针 PROBE 手动接入 XLA1 通道（P1–P4 优先显示）；仪器布局记忆（开关、拖动位置、三视图存本机，刷新后原样恢复）；M18 新增：画布 Paper 纸面主题（Auto/Paper 切换、本机记忆，配色取自 iCircuit 1.16 像素取样）、顶栏仿真带宽显示（5 kHz，Nyquist=1/(2·DT)）、元件中文名对齐 iCircuit（发光二极管、双极晶体管、单刀单掷/单刀双掷开关、n-MOSFET、直流电动机、伺服电机、RGB LED）。">
+<title>M18 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -81,6 +81,9 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 #topbar .menu small{float:right;color:#999;margin-left:16px;}
 #speedWrap{display:flex;align-items:center;gap:5px;font-size:10px;color:#555;margin-left:6px;white-space:nowrap;}
 #speed{padding:3px 4px;border:1px solid #c3c0c3;border-radius:4px;font-size:11px;background:#fff;}
+#themeWrap{display:flex;align-items:center;gap:5px;font-size:10px;color:#555;margin-left:6px;white-space:nowrap;}
+#themeSel{padding:3px 4px;border:1px solid #c3c0c3;border-radius:4px;font-size:11px;background:#fff;}
+#bwTag{font-size:10px;color:#555;margin-left:6px;white-space:nowrap;align-self:center;cursor:help;}
 #status{margin-left:auto;padding-left:10px;font-size:11px;color:#666;max-width:260px;align-self:center;}
 #main{grid-template-columns:1fr 236px;grid-template-rows:1fr 196px;background:#fff;}
 #main.noScope{grid-template-rows:1fr 0;}
@@ -152,7 +155,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 </style>
 </head>
 <body>
-<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M17</span></div>
+<div id="titlebar"><span class="lights"><i class="lt r"></i><i class="lt y"></i><i class="lt g"></i></span><span id="docTitle">电路实验室.cir — 已编辑</span><span id="verTag">M18</span></div>
 <div id="topbar">
   <div class="tgrp">
     <button class="tbtn" id="libBtn" title="打开元件库（L）"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/><path d="M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3"/></svg><span>元件库</span></button>
@@ -197,6 +200,8 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
   </div>
   <span class="sep"></span>
   <label id="speedWrap">速度<select id="speed"><option value="1">×1</option><option value="4" selected>×4</option><option value="16">×16</option></select></label>
+  <label id="themeWrap">主题<select id="themeSel"><option value="auto">Auto</option><option value="paper">Paper</option></select></label>
+  <span id="bwTag" title="仿真带宽 = 1/(2·DT) = 5 kHz（Nyquist 采样定理；DT=0.1 ms 固定步长；波特图扫描上限同为 5 kHz）">带宽 5 kHz</span>
   <span id="status">就绪</span>
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
 </div>
@@ -272,7 +277,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
       · 面板 ▤ = 三视图：面板 → 符号 → 图标（图标态单击还原）<br>
       · 单步：暂停后逐帧推进；⚠ = 过流/超功率<br>
       · IC ×33：74192/74193/74273/74157/74393/74163 等<br>
-      · 机电：直流电机 · 舵机 · 按钮 · 拨动开关<br>
+      · 机电：直流电动机 · 伺服电机 · 按钮 · 单刀双掷开关<br>
       · 传感：灯泡 · RGB · 应变片 · 压力 · 光敏 · 热敏 · 继电器<br>
       · <span class="kbd">Ctrl+Z</span> 撤销 · <span class="kbd">Ctrl+Shift+Z</span> 重做
     </div>
@@ -290,23 +295,24 @@ let propsTarget = null;
 let placing = null, placingRot = 0, placingKind = null, wireFrom = null;
 let mouse = {x:0,y:0}, running = true, speed = 4, topoDirty = true, hoverC = null;
 let simTime = 0, animT = 0, nodeV = [], nodeCur = new Map();
+let cvTheme = 'auto';        // M18 画布主题：auto=白底 / paper=米色纸面（iCircuit Lamp.cir 取样，台账 A22）
 
 const DEF = {
   V:  {name:'直流电源', unit:'V'},
-  VAC:{name:'交流/方波源'},
+  VAC:{name:'交流/方波电源'},
   R:  {name:'电阻',     unit:'Ω'},
   POT:{name:'电位器',   unit:'Ω'},
   C:  {name:'电容',     unit:'F'},
   L:  {name:'电感',     unit:'H'},
   D:  {name:'二极管'},
-  LED:{name:'LED'},
-  SW: {name:'开关'},
+  LED:{name:'发光二极管'},
+  SW: {name:'单刀单掷开关'},
   GND:{name:'接地'},
   AND:{name:'与门'}, OR:{name:'或门'}, XOR:{name:'异或门'}, NOT:{name:'非门'},
   TFF:{name:'T触发器'}, CLK:{name:'时钟'}, IN:{name:'逻辑输入'},
   PROBE:{name:'逻辑探针'}, SEG7:{name:'数码管(BCD)'},
-  NPN:{name:'NPN 三极管'}, PNP:{name:'PNP 三极管'},
-  NMOS:{name:'N-MOSFET'}, PMOS:{name:'P-MOSFET'},
+  NPN:{name:'双极晶体管(NPN)'}, PNP:{name:'双极晶体管(PNP)'},
+  NMOS:{name:'n-MOSFET'}, PMOS:{name:'p-MOSFET'},
   OPAMP:{name:'运算放大器'},
   T555:{name:'555 定时器'},
   IC:  {name:'集成电路'},
@@ -314,12 +320,12 @@ const DEF = {
   LDR: {name:'光敏电阻',  unit:'Ω'},
   NTC: {name:'热敏电阻',  unit:'Ω'},
   RELAY:{name:'继电器'},
-  DCMOTOR:{name:'直流电机'},
-  SERVO:{name:'舵机'},
+  DCMOTOR:{name:'直流电动机'},
+  SERVO:{name:'伺服电机'},
   BTN:{name:'按钮'},
-  SPDT:{name:'拨动开关'},
+  SPDT:{name:'单刀双掷开关'},
   LAMP:{name:'灯泡'},
-  RGBLED:{name:'RGB 三色灯'},
+  RGBLED:{name:'RGB LED'},
   STRAIN:{name:'应变片', unit:'Ω'},
   PRESS:{name:'压力传感器'},
 };
@@ -1356,13 +1362,16 @@ function draw(){
   if(cv.width!==Math.round(w*dpr)){cv.width=w*dpr;cv.height=h*dpr;}
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,w,h);
-  /* 白色画布 + 浅灰蓝方格（iCircuit 1.16 取样 #D8DAE0 / #EEF0F5） */
-  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h);
+  /* M18 画布主题：Auto=白底浅灰蓝方格（iCircuit 1.16 取样 #D8DAE0 / #EEF0F5）；
+     Paper=米色纸面 + 绿灰网格（iCircuit Lamp.cir 像素取样，台账 A22：底 #FCFDE8 / 线 #CCE1D9），
+     次线同色半透明、主线全色；导线仍按电压着色（iCircuit 的「电压颜色」是文档级开关，不随主题） */
+  const paper=(cvTheme==='paper');
+  ctx.fillStyle=paper?'#FCFDE8':'#ffffff'; ctx.fillRect(0,0,w,h);
   ctx.lineWidth=1;
-  ctx.strokeStyle='#f0f2f7';
+  ctx.strokeStyle=paper?'rgba(204,225,217,.5)':'#f0f2f7';
   for(let gx=0;gx<=w;gx+=20){ ctx.beginPath(); ctx.moveTo(gx+.5,0); ctx.lineTo(gx+.5,h); ctx.stroke(); }
   for(let gy=0;gy<=h;gy+=20){ ctx.beginPath(); ctx.moveTo(0,gy+.5); ctx.lineTo(w,gy+.5); ctx.stroke(); }
-  ctx.strokeStyle='#e2e5ec';
+  ctx.strokeStyle=paper?'#CCE1D9':'#e2e5ec';
   for(let gx=0;gx<=w;gx+=100){ ctx.beginPath(); ctx.moveTo(gx+.5,0); ctx.lineTo(gx+.5,h); ctx.stroke(); }
   for(let gy=0;gy<=h;gy+=100){ ctx.beginPath(); ctx.moveTo(0,gy+.5); ctx.lineTo(w,gy+.5); ctx.stroke(); }
   for(const wd of wires){
@@ -2806,12 +2815,12 @@ const PAL=[
   ['LDR','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M3 -9 l4 4 m0 -2.5 l-2.5 2.5 M9 -9 l4 4 m0 -2.5 l-2.5 2.5','光敏电阻'],
   ['NTC','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M-8 8 l16 -16','热敏电阻'],
   ['RELAY','M-15 -7 h9 v14 h-9 z M0 0 h5 M9 5 h5 M9 5 l5 -10','继电器'],
-  ['DCMOTOR','M-9 0 a9 9 0 1 0 .1 0 M-3.5 -3.5 h7 v7 h-7 z','直流电机'],
-  ['SERVO','M-14 -7 h28 v14 h-28 z M0 0 l11 -7 M0 0 a2 2 0 1 0 .1 0','舵机'],
+  ['DCMOTOR','M-9 0 a9 9 0 1 0 .1 0 M-3.5 -3.5 h7 v7 h-7 z','直流电动机'],
+  ['SERVO','M-14 -7 h28 v14 h-28 z M0 0 l11 -7 M0 0 a2 2 0 1 0 .1 0','伺服电机'],
   ['BTN','M-16 0 h6 M10 0 h6 M-10 -3 h20 M0 -3 v-5 m-3.5 0 h7','按钮'],
-  ['SPDT','M-16 6 h6 M10 -6 h6 M10 6 h6 M-10 6 L8 -4','拨动开关'],
+  ['SPDT','M-16 6 h6 M10 -6 h6 M10 6 h6 M-10 6 L8 -4','单刀双掷开关'],
   ['LAMP','M-14 0 h9 M5 0 h9 M-5 0 a5 5 0 1 0 .1 0 M-3 3 l1.5 -4 l1.5 4 l1.5 -4 l1.5 4','灯泡'],
-  ['RGBLED','M-13 -6 h6 M-13 0 h6 M-13 6 h6 M7 0 h6 M-8 -7 a3 3 0 1 0 .1 0 M-1 0 a3 3 0 1 0 .1 0 M-8 7 a3 3 0 1 0 .1 0','RGB 三色灯'],
+  ['RGBLED','M-13 -6 h6 M-13 0 h6 M-13 6 h6 M7 0 h6 M-8 -7 a3 3 0 1 0 .1 0 M-1 0 a3 3 0 1 0 .1 0 M-8 7 a3 3 0 1 0 .1 0','RGB LED'],
   ['STRAIN','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M-6 -12 v-5 m-2 2 l2 -2 l2 2 M6 -12 v-5 m-2 2 l2 -2 l2 2','应变片'],
   ['PRESS','M-14 -6 h6 M-14 6 h6 M8 0 h6 M-8 -8 h16 v16 h-16 z M-3 0 h6 M0 -3 v6','压力传感器'],
 ];
@@ -2877,6 +2886,13 @@ document.getElementById('scopeBtn').onclick=e=>{
   e.currentTarget.classList.toggle('on',!hide);
 };
 document.getElementById('speed').onchange=e=>speed=+e.target.value;
+/* M18：画布主题 Auto / Paper，选择存本机（tick() 在脚本末尾才首帧绘制，此处恢复先于首绘） */
+try{ const _th=localStorage.getItem(STORE_KEY+':theme'); if(_th==='paper') cvTheme='paper'; }catch(e){}
+const themeSelEl=document.getElementById('themeSel');
+if(themeSelEl){
+  themeSelEl.value=cvTheme;
+  themeSelEl.onchange=e=>{ cvTheme=e.target.value; try{ localStorage.setItem(STORE_KEY+':theme',cvTheme); }catch(_){} };
+}
 document.getElementById('clearBtn').onclick=()=>{ pushUndo(); comps=[];wires=[];selComps=[];propsTarget=null;showProps();topoDirty=true;chBuf=new Map(); };
 
 /* ================= 演示：桥式整流 + 滤波 ================= */
