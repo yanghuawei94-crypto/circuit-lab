@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M8 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、74xx/4xxx 系列集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066）与 8 位 MCU 脚本仿真，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，新增并查集节点分析可视化。">
-<title>M8 · 电路实验室</title>
+<meta name="description" content="M9 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、74xx/4xxx 系列集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066）与 8 位 MCU 脚本仿真，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，新增万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记。">
+<title>M9 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -55,7 +55,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </head>
 <body>
 <div id="topbar">
-  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M8</span></b>
+  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M9</span></b>
   <button class="tbtn on" id="runBtn">⏸ 暂停</button>
   <button class="tbtn" id="demoBtn">🌉 桥式整流</button>
   <button class="tbtn" id="demoCntBtn">🔢 4位计数器</button>
@@ -65,6 +65,8 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
   <button class="tbtn" id="demo555Btn">🕒 555 闪烁</button>
   <button class="tbtn" id="demoIcBtn">🧩 4017 流水灯</button>
   <button class="tbtn" id="netBtn" title="显示/隐藏并查集节点分析面板">🌲 节点分析</button>
+  <button class="tbtn" id="meterBtn" title="万用表探针：悬停元件读电压/电流/功率，悬停导线/引脚读节点电压（采样与仿真帧同步）">📟 万用表</button>
+  <button class="tbtn" id="stepBtn" title="暂停时按一次推进一帧仿真" disabled>⏭ 单步</button>
   <button class="tbtn" id="clearBtn">🗑 清空</button>
   <button class="tbtn" id="undoBtn" title="撤销 (Ctrl+Z)">撤销</button>
   <button class="tbtn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">重做</button>
@@ -91,6 +93,8 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
       · 单击选中元件进示波器；<span class="kbd">Shift+点击</span> 追加通道（最多 4 路）<br>
       · 黄点 = 电流方向与大小<br>
       · 🌲 节点分析 = 并查集分组的节点森林（同色同节点）<br>
+      · 📟 万用表：悬停即读数（V / I / P），<span class="kbd">Esc</span> 退出<br>
+      · ⏭ 单步：暂停后逐帧推进；⚠ 标记 = 元件过流/超功率<br>
       · <span class="kbd">Ctrl+Z</span> 撤销 · <span class="kbd">Ctrl+Shift+Z</span> 重做<br>
       · 💾 保存到本机，⬇ 导出 JSON 换设备
     </div>
@@ -768,6 +772,8 @@ function draw(){
   }
   for(const c of comps) drawComp(c);
   if(netMode) drawNetPins();
+  drawWarns();                       // M9：超限元件 ⚠ 标记 + 告警清单
+  if(meterMode) drawMeter();         // M9：万用表悬浮读数
   if(placing){ ctx.globalAlpha=.55; drawComp(placeComp(mouse.x,mouse.y,placingRot)); ctx.globalAlpha=1; }
   if(wireFrom){
     ctx.beginPath(); ctx.moveTo(wireFrom.x,wireFrom.y); ctx.lineTo(mouse.x,mouse.y);
@@ -1116,7 +1122,7 @@ window.addEventListener('keydown',e=>{
   const mod=e.metaKey||e.ctrlKey;
   if(mod&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); if(e.shiftKey) doRedo(); else doUndo(); return; }
   if(mod&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); doRedo(); return; }
-  if(e.key==='Escape'){ placing=null; wireFrom=null; }
+  if(e.key==='Escape'){ placing=null; wireFrom=null; setMeterMode(false); }
   if((e.key==='r'||e.key==='R')){
     if(placing) placingRot^=1;
     else if(propsTarget&&propsTarget.type&&!DIGI_SET.has(propsTarget.type)&&propsTarget.type!=='IC'&&propsTarget.type!=='MCU'){ propsTarget.rot^=1; topoDirty=true; }
@@ -1222,6 +1228,7 @@ setInterval(()=>{   // 属性面板实时刷新
     txt=`${compV(c).toFixed(3)} V · ${(Math.abs(c.cur||0)*1000).toFixed(2)} mA`;
     if(c.type==='NPN'||c.type==='PNP') txt+=` · ${bjtRegion(c)}`;
   }
+  const wm=stressOf(c); if(wm) txt+=` · ⚠ ${wm}`;   // M9：属性面板同步显示超限告警
   rt.textContent=txt;
 },300);
 
@@ -1310,6 +1317,143 @@ function bjtRegion(c){
   if(vbe<0.45) return '截止区';
   if(vbc>0.4) return '饱和区';
   return '放大区';
+}
+
+/* ================= M9 教学仪器：万用表探针 / 单步推进 / 过流·超功率告警 ================= */
+let meterMode=false;
+const fmtSI=(v,u)=>{                    // 工程计数法：自动选 M/k/m/µ/n 前缀
+  const a=Math.abs(v);
+  if(a<1e-12) return '0.00 '+u;
+  for(const [f,p] of [[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n']])
+    if(a>=f) return (v/f).toFixed(a/f<10?2:1)+' '+p+u;
+  return (v*1e9).toFixed(2)+' n'+u;
+};
+function setMeterMode(on){
+  meterMode=on;
+  document.getElementById('meterBtn').classList.toggle('on',on);
+  cv.style.cursor=on?'cell':'crosshair';
+}
+document.getElementById('meterBtn').onclick=()=>setMeterMode(!meterMode);
+
+/* ---- 单步推进：暂停时按一次 = 运行模式下一帧的仿真量（50×speed 个时间步）---- */
+function stepFrame(){
+  const total=50*speed, every=Math.max(1,Math.round(2e-3/DT));
+  chTs=every*DT;
+  for(let k=0;k<total;k++){
+    stepOnce();
+    if((k+1)%every===0) for(const c of selComps){
+      if(!chBuf.has(c.id)) chBuf.set(c.id,[]);
+      const b2=chBuf.get(c.id); b2.push(compV(c)); if(b2.length>1500) b2.shift();
+    }
+  }
+  animT++;
+}
+document.getElementById('stepBtn').onclick=()=>{
+  if(running) return;
+  if(topoDirty){ buildNodes(); nodeV=[]; topoDirty=false; if(netMode) renderNetPanel(); }
+  stepFrame();
+  setStatus(`单步推进 ${(50*speed*DT*1000).toFixed(0)} ms · 仿真时间 ${(simTime*1000).toFixed(0)} ms`);
+};
+
+/* ---- 过流 / 超功率限额（教学近似值；对标 iCircuit 过压告警的改进：元件级可见标记 + 超限数值）---- */
+const LIMITS={
+  LED:{i:0.025}, D:{i:0.2},                      // LED 25mA、整流二极管 200mA
+  R:{p:0.25}, POT:{p:0.5},                       // 1/4W 电阻、1/2W 电位器
+  NPN:{i:0.1}, PNP:{i:0.1}, NMOS:{i:0.2}, PMOS:{i:0.2},
+};
+function stressOf(c){
+  const L=LIMITS[c.type]; if(!L) return null;
+  const v=Math.abs(compV(c)), i=Math.abs(c.cur||0), p=v*i;
+  if(L.i&&i>L.i) return `${DEF[c.type].name}过流 ${fmtSI(i,'A')}（上限 ${fmtSI(L.i,'A')}）`;
+  if(L.p&&p>L.p) return `${DEF[c.type].name}超功率 ${fmtSI(p,'W')}（上限 ${fmtSI(L.p,'W')}）`;
+  return null;
+}
+function rrect(x,y,w,h,r){                // 圆角矩形路径（fill/stroke 由调用方决定）
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function drawWarns(){
+  const ws=[];
+  for(const c of comps){ const m=stressOf(c); if(m) ws.push({c,m}); }
+  for(const {c} of ws){                          // 元件本体上的闪烁警示三角
+    const x=c.x+16, y=c.y-30;
+    ctx.save(); ctx.globalAlpha=0.6+0.4*Math.sin(animT*0.2);
+    ctx.beginPath(); ctx.moveTo(x,y-8); ctx.lineTo(x+8,y+6); ctx.lineTo(x-8,y+6); ctx.closePath();
+    ctx.fillStyle='#e2762d'; ctx.fill(); ctx.lineWidth=1.5; ctx.strokeStyle='#fff'; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.fillText('!',x,y+4);
+    ctx.restore();
+  }
+  if(!ws.length) return;                         // 左上角告警清单（最多 4 行，超出汇总）
+  ctx.save(); ctx.font='12px sans-serif'; ctx.textAlign='left';
+  const lines=ws.slice(0,4).map(o=>'⚠ '+o.m); if(ws.length>4) lines.push(`… 共 ${ws.length} 项超限`);
+  const bw=Math.max(...lines.map(l=>ctx.measureText(l).width))+20, bh=lines.length*18+12;
+  ctx.fillStyle='rgba(255,244,230,.94)'; ctx.strokeStyle='#e2762d'; ctx.lineWidth=1;
+  rrect(10,10,bw,bh,8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#b45309';
+  lines.forEach((l,i)=>ctx.fillText(l,20,28+i*18));
+  ctx.restore();
+}
+
+/* ---- 万用表：悬停读数，刷新率 = 仿真帧率（对标 iCircuit 万用表 2Hz 采样的改进点）---- */
+function drawMeter(){
+  const p=mouse, c=hitComp(p);
+  let title='', rows=[];
+  const V=nd=>nd>0?(nodeV[nd-1]||0):0;
+  if(c){
+    const t=c.type;
+    title=DEF[t].name+(t==='IC'?' '+c.kind:'');
+    if(t==='R') title+=' '+fmtR(c.val);
+    if(t==='POT') title+=' '+fmtR(Math.max(10,c.rmax*c.ratio/100));
+    if(t==='C') title+=' '+fmtSI(c.val,'F');
+    if(t==='L') title+=' '+fmtSI(c.val,'H');
+    if(t==='V') title+=' '+c.val+' V';
+    if(t==='VAC') title+=` ${c.amp}V·${c.freq}Hz`;
+    if(t==='CLK') title+=' '+c.freq+' Hz';
+    if(t==='GND') rows=[['电压','0.00 V']];
+    else if(t==='IN'||t==='CLK'){ const ps=nOf(c), hi=(c._out&&c._out[0])?1:0; rows=[['输出',hi+' · '+fmtSI(V(ps[0]),'V')]]; }
+    else if(OUTIDX[t]){
+      const ps=nOf(c);
+      rows=OUTIDX[t].map((pi,i)=>[t==='TFF'?(i?'Q̄':'Q'):'OUT', fmtSI(V(ps[pi]),'V')+' '+(V(ps[pi])>2.5?'高':'低')]);
+    }
+    else if(t==='PROBE'){ const ps=nOf(c); rows=[['输入',fmtSI(V(ps[0]),'V')]]; }
+    else if(t==='SEG7') rows=[['类型','BCD 译码显示']];
+    else if(t==='IC'){ const sp=specOf(c); rows=sp.outs.length?[['输出',sp.outs.map((n,i)=>n+'='+((c._out||[])[i]?1:0)).join(' ')]]:[['状态','模拟开关']]; }
+    else if(t==='MCU') rows=[['引脚',['P0','P1','P2','P3','P4','P5','P6','P7'].map((n,i)=>n+'='+((c._ov||[])[i]?1:0)).join(' ')]];
+    else if(t==='T555') rows=[['输出',(c._q?'高':'低')+' · '+fmtSI(compV(c),'V')],['供电',fmtSI(c._vcc||0,'V')]];
+    else {
+      const v=compV(c), i=c.cur||0;
+      rows=[['电压',fmtSI(v,'V')],['电流',fmtSI(Math.abs(i),'A')],['功率',fmtSI(Math.abs(v*i),'W')]];
+      if(t==='NPN'||t==='PNP') rows.push(['工作区',bjtRegion(c)]);
+    }
+    const wm=stressOf(c); if(wm) rows.push(['⚠ 告警',wm,'warn']);
+  } else {
+    const pin=hitPin(p), w=pin?null:hitWire(p);
+    if(pin||w){
+      const nd=nodeAt(pin||w.a);
+      title=nd===0?'地（GND）':'节点 '+nd;
+      rows=[['电压',fmtSI(V(nd),'V')]];
+    } else { title='📟 万用表'; rows=[['提示','指向元件或导线']]; }
+  }
+  /* 悬浮读数框（自动避让画布边缘） */
+  ctx.save();
+  ctx.font='12px ui-monospace,Menlo,monospace'; ctx.textAlign='left';
+  const pad=8, lh=17;
+  const tw=Math.max(ctx.measureText(title).width, ...rows.map(r=>ctx.measureText(r[0]+'  '+r[1]).width));
+  const bw=tw+pad*2+28, bh=lh*(rows.length+1)+pad*1.5;
+  let bx=p.x+16, by=p.y+16;
+  if(bx+bw>cv.clientWidth-4) bx=p.x-16-bw;
+  if(by+bh>cv.clientHeight-4) by=p.y-16-bh;
+  ctx.fillStyle='rgba(255,255,255,.96)'; ctx.strokeStyle='#2f6bff'; ctx.lineWidth=1;
+  rrect(bx,by,bw,bh,8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#17202a'; ctx.fillText(title,bx+pad,by+pad+5);
+  rows.forEach((r,i)=>{
+    const y=by+pad+5+lh*(i+1);
+    ctx.fillStyle=r[2]==='warn'?'#c0392b':'#5c6672';
+    ctx.fillText(r[0],bx+pad,y);
+    ctx.fillStyle=r[2]==='warn'?'#c0392b':'#17202a';
+    ctx.textAlign='right'; ctx.fillText(r[1],bx+bw-pad,y); ctx.textAlign='left';
+  });
+  ctx.restore();
 }
 
 /* ================= 撤销 / 保存 / 导入导出（M6-1） ================= */
@@ -1470,7 +1614,7 @@ for(const it of PAL){
 }
 
 /* ================= 顶栏 ================= */
-document.getElementById('runBtn').onclick=e=>{ running=!running; e.target.textContent=running?'⏸ 暂停':'▶ 运行'; e.target.classList.toggle('on',running); };
+document.getElementById('runBtn').onclick=e=>{ running=!running; e.target.textContent=running?'⏸ 暂停':'▶ 运行'; e.target.classList.toggle('on',running); document.getElementById('stepBtn').disabled=running; };
 document.getElementById('speed').onchange=e=>speed=+e.target.value;
 document.getElementById('clearBtn').onclick=()=>{ pushUndo(); comps=[];wires=[];selComps=[];propsTarget=null;showProps();topoDirty=true;chBuf=new Map(); };
 
