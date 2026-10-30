@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M11 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、21 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511 及新增 74153 双4选1/74181 ALU/4047 振荡/4013 双D/7447 七段低有效/4051 模拟多路）、8 位 MCU 脚本仿真、光敏/热敏传感器与继电器，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记。">
-<title>M11 · 电路实验室</title>
+<meta name="description" content="M12 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、27 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051 及新增 7402 或非/7473 JK 触发/7490 十进计数/7493 二进制计数/74164 串入并出/4060 分频）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记。">
+<title>M12 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -55,7 +55,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </head>
 <body>
 <div id="topbar">
-  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M11</span></b>
+  <b>🔌 电路实验室 <span style="color:var(--muted);font-weight:400;font-size:12px">M12</span></b>
   <button class="tbtn on" id="runBtn">⏸ 暂停</button>
   <button class="tbtn" id="demoBtn">🌉 桥式整流</button>
   <button class="tbtn" id="demoCntBtn">🔢 4位计数器</button>
@@ -95,8 +95,9 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
       · 🌲 节点分析 = 并查集分组的节点森林（同色同节点）<br>
       · 📟 万用表：悬停即读数（V / I / P），<span class="kbd">Esc</span> 退出<br>
       · ⏭ 单步：暂停后逐帧推进；⚠ 标记 = 元件过流/超功率<br>
-      · 新增 IC：74153 双4选1 · 74181 ALU · 4047 振荡 · 4013 双D · 7447 七段(低有效) · 4051 模拟多路<br>
-      · 新增传感器/机电：光敏电阻 · 热敏电阻 · 继电器（线圈 ≥70% 额定吸合）<br>
+      · IC ×27：新增 7402 或非 · 7473 JK · 7490 十进 · 7493 二进制 · 74164 串入并出 · 4060 分频<br>
+      · 新增机电：直流电机（反电动势）· 舵机（1–2ms 脉宽）· 按钮（按住闭合）· 拨动开关（双击切换）<br>
+      · 传感器/继电器：光敏电阻 · 热敏电阻 · 继电器（线圈 ≥70% 额定吸合）<br>
       · <span class="kbd">Ctrl+Z</span> 撤销 · <span class="kbd">Ctrl+Shift+Z</span> 重做<br>
       · 💾 保存到本机，⬇ 导出 JSON 换设备
     </div>
@@ -138,6 +139,10 @@ const DEF = {
   LDR: {name:'光敏电阻',  unit:'Ω'},
   NTC: {name:'热敏电阻',  unit:'Ω'},
   RELAY:{name:'继电器'},
+  DCMOTOR:{name:'直流电机'},
+  SERVO:{name:'舵机'},
+  BTN:{name:'按钮'},
+  SPDT:{name:'拨动开关'},
 };
 /* 非线性器件：参与牛顿迭代 */
 const NL_SET=new Set(['D','LED','NPN','PNP','NMOS','PMOS','OPAMP']);
@@ -161,6 +166,10 @@ function mkComp(type,x,y,rot=0){
   if(type==='LDR'){ c.rmin=1000; c.rmax=1e6; c.light=50; }      // 光照 0-100%，阻值对数插值
   if(type==='NTC'){ c.r25=10000; c.beta=3950; c.temp=25; }      // B 常数模型
   if(type==='RELAY'){ c.rcoil=200; c.volts=5; c._en=false; c._vc=0; }
+  if(type==='DCMOTOR'){ c.ra=5; c.ke=0.02; c.j=1e-5; c.bf=1e-4; c._w=0; c._e=0; c._th=0; } // _w=角速度rad/s _e=反电动势
+  if(type==='SERVO'){ c._ang=90; c._pw=0; c._sigPrev=false; }
+  if(type==='BTN') c.closed=false;                // 按钮默认断开，按住闭合、松开断开
+  if(type==='SPDT') c.pos=0;                      // 0=COM–A，1=COM–B
   return c;
 }
 /* 传感器等效阻值：LDR 对数插值（亮→rmin，暗→rmax）；NTC 用 B 参数方程 */
@@ -200,6 +209,10 @@ function pinsOf(c){
       return rotPts(c, [[-50,-30],[-50,0],[-50,30],[50,-30],[50,0],[50,30]]); // TRIG,THR,DIS,VCC,OUT,GND
     case 'RELAY':
       return rotPts(c, [[-40,-15],[-40,15],[40,-15],[40,0],[40,15]]);        // 线圈+,线圈−,NC,COM,NO
+    case 'SERVO':
+      return rotPts(c, [[-40,-20],[-40,20],[40,0]]);                         // 电源+,电源−,SIG
+    case 'SPDT':
+      return rotPts(c, [[-40,0],[40,-20],[40,20]]);                          // COM,A,B
     case 'IC': case 'MCU':
       return icPins(c).map(p=>({x:p.x,y:p.y}));
     default:
@@ -436,6 +449,73 @@ const IC_SPEC={
     left:['S0','S1','S2','E'], right:['COM','Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7'],
     outs:[],
     step(c){ c._out=[]; }},
+  /* ---- M12 新增：或非门 / JK 触发器 / 计数器 / 移位寄存器 / 分频器 ---- */
+  '7402':{title:'四路 2 输入或非门',
+    left:['1A','1B','2A','2B','3A','3B','4A','4B'], right:['1Y','2Y','3Y','4Y'],
+    outs:['1Y','2Y','3Y','4Y'],
+    step(c,h){ c._out=[!(h('1A')||h('1B')),!(h('2A')||h('2B')),!(h('3A')||h('3B')),!(h('4A')||h('4B'))].map(v=>v?1:0); }},
+  '7473':{title:'双 JK 触发器（下降沿，CLR 高有效）',
+    left:['1J','1K','1CLK','1CLR','2J','2K','2CLK','2CLR'], right:['1Q','1QN','2Q','2QN'],
+    outs:['1Q','1QN','2Q','2QN'],
+    step(c,h){
+      const st=c._st||(c._st={q:[0,0],ck:[1,1]});
+      for(let i=0;i<2;i++){
+        const k=i?'2':'1', clk=h(k+'CLK');
+        if(h(k+'CLR')) st.q[i]=0;                      // 异步清零（与 7474 一致取高有效）
+        else if(!clk&&st.ck[i]){                       // 下降沿动作
+          const j=h(k+'J'), kk=h(k+'K');
+          if(j&&kk) st.q[i]=1-st.q[i];                 // J=K=1 翻转
+          else if(j) st.q[i]=1;
+          else if(kk) st.q[i]=0;                       // J=K=0 保持
+        }
+        st.ck[i]=clk;
+      }
+      c._out=[st.q[0],1-st.q[0],st.q[1],1-st.q[1]];
+    }},
+  '7490':{title:'十进制计数器（BCD 输出，RST 高清零）',
+    left:['CLK','RST'], right:['QA','QB','QC','QD'],
+    outs:['QA','QB','QC','QD'],
+    step(c,h){
+      const st=c._st||(c._st={n:0,ck:0});
+      const clk=h('CLK');
+      if(h('RST')) st.n=0;
+      else if(clk&&!st.ck) st.n=(st.n+1)%10;           // 上升沿计数，0-9 循环
+      st.ck=clk;
+      c._out=[st.n&1,(st.n>>1)&1,(st.n>>2)&1,(st.n>>3)&1];
+    }},
+  '7493':{title:'4 位二进制计数器（RST 高清零）',
+    left:['CLK','RST'], right:['QA','QB','QC','QD'],
+    outs:['QA','QB','QC','QD'],
+    step(c,h){
+      const st=c._st||(c._st={n:0,ck:0});
+      const clk=h('CLK');
+      if(h('RST')) st.n=0;
+      else if(clk&&!st.ck) st.n=(st.n+1)%16;           // 上升沿计数，0-15 循环
+      st.ck=clk;
+      c._out=[st.n&1,(st.n>>1)&1,(st.n>>2)&1,(st.n>>3)&1];
+    }},
+  '74164':{title:'8 位串入并出移位寄存器（CLR 高清零）',
+    left:['A','B','CLK','CLR'], right:['QA','QB','QC','QD','QE','QF','QG','QH'],
+    outs:['QA','QB','QC','QD','QE','QF','QG','QH'],
+    step(c,h){
+      const st=c._st||(c._st={q:[0,0,0,0,0,0,0,0],ck:0});
+      const clk=h('CLK');
+      if(h('CLR')) st.q=[0,0,0,0,0,0,0,0];
+      else if(clk&&!st.ck) st.q=[(h('A')&&h('B'))?1:0].concat(st.q.slice(0,7));   // A·B 串行输入右移
+      st.ck=clk;
+      c._out=st.q.slice();
+    }},
+  '4060':{title:'14 级二进制计数/分频器（RST 高清零）',
+    left:['CLK','RST'], right:['Q4','Q5','Q6','Q7','Q8','Q9','Q10','Q12','Q13','Q14'],
+    outs:['Q4','Q5','Q6','Q7','Q8','Q9','Q10','Q12','Q13','Q14'],
+    step(c,h){
+      const st=c._st||(c._st={n:0,ck:0});
+      const clk=h('CLK');
+      if(h('RST')) st.n=0;
+      else if(clk&&!st.ck) st.n=(st.n+1)&0x3FFF;
+      st.ck=clk;
+      c._out=[4,5,6,7,8,9,10,12,13,14].map(b=>(st.n>>(b-1))&1);   // Qn = 计数器第 n-1 位（÷2ⁿ）
+    }},
 };
 const MCU_SPEC={
   title:'8 路 GPIO 微控制器（脚本驱动）',
@@ -710,7 +790,7 @@ function assembleSolve(){
     else if(c.type==='LDR'){ const r=ldrR(c); gS(a,bn,1/r); c._r=r; }
     else if(c.type==='NTC'){ const r=ntcR(c); gS(a,bn,1/r); c._r=r; }
     else if(c.type==='POT'){ const r=Math.max(10, c.rmax*c.ratio/100); gS(a,bn,1/r); c._r=r; }
-    else if(c.type==='SW') gS(a,bn,c.closed?100:1e-9);
+    else if(c.type==='SW'||c.type==='BTN') gS(a,bn,c.closed?100:1e-9);
     else if(c.type==='C'){
       const G=2*c.val/DT, I=-G*c.vp-c.ip;
       gS(a,bn,G); iS(a,bn,I); c._G=G; c._I=I;
@@ -755,6 +835,19 @@ function assembleSolve(){
       gS(ps7[0],ps7[1],1/Math.max(1,c.rcoil||200));          // 线圈
       gS(ps7[4],ps7[3], c._en?1/0.05:1e-9);                  // COM-NO：吸合导通
       gS(ps7[2],ps7[3], c._en?1e-9:1/0.05);                  // COM-NC：释放导通
+    }
+    else if(c.type==='DCMOTOR'){             // 直流电机：电枢电阻 Ra + 反电动势 E（诺顿等效，E 用上一步转速）
+      const ra=Math.max(0.1,c.ra||5);
+      gS(a,bn,1/ra); iS(a,bn,-(c._e||0)/ra);                 // I = (V−E)/Ra
+    }
+    else if(c.type==='SERVO'){               // 舵机：电源端负载（转动时电流增大），SIG 高阻输入不加盖印
+      const ps8=nOf(c);
+      gS(ps8[0],ps8[1], c._moving?1/60:1/1000);
+    }
+    else if(c.type==='SPDT'){                // 拨动开关：COM–A / COM–B 切换
+      const ps9=nOf(c);
+      gS(ps9[0],ps9[1], c.pos?1e-9:100);
+      gS(ps9[0],ps9[2], c.pos?100:1e-9);
     }
   }
   for(let n=1;n<nNodes;n++) A[n-1][n-1]+=1e-8;   // 浮空泄放
@@ -858,7 +951,16 @@ function stepOnce(){
     else if(c.type==='LDR'||c.type==='NTC') c.cur=v/c._r;
     else if(c.type==='RELAY') c.cur=(c._vc||0)/Math.max(1,c.rcoil||200);   // 线圈电流
     else if(c.type==='POT') c.cur=v/c._r;
-    else if(c.type==='SW') c.cur=c.closed?v*100:0;
+    else if(c.type==='SW'||c.type==='BTN') c.cur=c.closed?v*100:0;
+    else if(c.type==='DCMOTOR'){               // 直流电机：电枢电流 + 机械方程 J·dω/dt = Kt·I − B·ω（Kt=Ke）
+      const ra=Math.max(0.1,c.ra||5), ke=c.ke||0.02;
+      c.cur=(v-(c._e||0))/ra;
+      const J=Math.max(1e-7,c.j||1e-5), B=Math.max(0,c.bf==null?1e-4:c.bf);
+      let w=(c._w||0)+(ke*c.cur-B*(c._w||0))/J*DT;
+      if(!isFinite(w)) w=0;
+      c._w=w; c._e=ke*w; c._th=(c._th||0)+w*DT;   // 反电动势与转子角供下一步/绘制
+    }
+    else if(c.type==='SERVO') c.cur=v*(c._moving?1/60:1/1000);   // 舵机电源电流（跟随上一步负载档）
     else if(c.type==='C'||c.type==='L'){ c.ip=c._G*v+c._I; c.vp=v; c.cur=c.ip; }
     else if(c.type==='D'){
       c.vp=v;
@@ -880,6 +982,22 @@ function stepOnce(){
       const ps=nOf(c);
       const vc=Math.abs((ps[0]>0?x[ps[0]-1]:0)-(ps[1]>0?x[ps[1]-1]:0));
       c._vc=vc; c._en=vc>=0.7*(c.volts||5);
+      continue;
+    }
+    if(c.type==='SERVO'){          // 舵机：测 SIG 脉宽（1–2ms → 0–180°），角度限速逼近
+      const ps=nOf(c);
+      const vs=(ps[2]>0?(x[ps[2]-1]||0):0)-(ps[1]>0?(x[ps[1]-1]||0):0);
+      const hi=vs>2.5;
+      if(hi&&!c._sigPrev) c._tRise=simTime;                    // 上升沿计时
+      if(!hi&&c._sigPrev&&c._tRise!==undefined){               // 下降沿 → 结算脉宽
+        const pw=(simTime-c._tRise)*1000;                      // ms
+        if(pw>=0.3&&pw<=3) c._pw=pw;                           // 只接受伺服脉宽窗口
+      }
+      c._sigPrev=hi;
+      const tgt=c._pw>0?Math.max(0,Math.min(180,(c._pw-1)*180)):90;
+      const ang=c._ang==null?90:c._ang, d=tgt-ang, mx=360*DT;  // 360°/s 舵机速度限制
+      c._moving=Math.abs(d)>0.5;
+      c._ang=c._moving?ang+Math.sign(d)*Math.min(Math.abs(d),mx):ang;
       continue;
     }
     if(c.type==='IC'||c.type==='MCU'){       // 集成块：按引脚名采样
@@ -966,6 +1084,8 @@ function drawComp(c){
     drawIC(c);
   } else if(c.type==='RELAY'){
     drawRelay(c);
+  } else if(MECH_SET.has(c.type)){
+    drawMech(c);
   } else if(DIGI_SET.has(c.type)){
     drawDigi(c);
   } else if(ADV_SET.has(c.type)){
@@ -1017,12 +1137,21 @@ function drawComp(c){
       ctx.beginPath(); ctx.arc(-24,0,2.5,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(24,0,2.5,0,7); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-24,0); c.closed?ctx.lineTo(24,0):ctx.lineTo(20,-14); ctx.stroke();
       ctx.fillStyle='#5c6672'; ctx.fillText(c.closed?'闭合':'断开',0,-18);
+    } else if(c.type==='BTN'){
+      ctx.beginPath(); ctx.arc(-24,0,2.5,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(24,0,2.5,0,7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-24,-5); ctx.lineTo(-24,0); ctx.moveTo(24,-5); ctx.lineTo(24,0); ctx.stroke(); // 触点柱
+      const by=c.closed?-5:-11;
+      ctx.beginPath(); ctx.moveTo(-26,by); ctx.lineTo(26,by); ctx.lineWidth=3; ctx.stroke(); ctx.lineWidth=2;    // 桥板
+      ctx.beginPath(); ctx.moveTo(0,by); ctx.lineTo(0,by-7); ctx.stroke();                                        // 按钮杆
+      ctx.beginPath(); ctx.moveTo(-5,by-7); ctx.lineTo(5,by-7); ctx.lineWidth=3.5; ctx.stroke(); ctx.lineWidth=2; // 按钮帽
+      ctx.fillStyle='#5c6672'; ctx.fillText(c.closed?'按下':'按钮（按住）',0,-26);
     }
     for(const px of [-40,40]){ ctx.beginPath(); ctx.arc(px,0,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
   }
   ctx.restore();
 }
 const DIGI_SET=new Set(['AND','OR','XOR','NOT','TFF','CLK','IN','PROBE','SEG7']);
+const MECH_SET=new Set(['DCMOTOR','SERVO','SPDT']);
 function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.stroke(); }
 function draw7seg(cx,cy,n){
   const SEG={a:[-12,-26,12,-26],b:[14,-24,14,-2],c:[14,2,14,24],d:[-12,26,12,26],e:[-14,2,-14,24],f:[-14,-24,-14,-2],g:[-12,0,12,0]};
@@ -1138,6 +1267,40 @@ function drawRelay(c){
   ctx.fillText(on?'● 吸合':'○ 释放',0,44);
   ctx.fillStyle='#5c6672';
   ctx.fillText(`${(c._vc||0).toFixed(1)}V / ${c.volts}V`,0,56);
+  for(const p of pinsOf(c)){ ctx.beginPath(); ctx.arc(p.x-c.x,p.y-c.y,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
+}
+/* M12：机电件符号（直流电机 / 舵机 / SPDT 拨动开关，本地坐标系） */
+function drawMech(c){
+  ctx.lineWidth=2; ctx.strokeStyle='#33404f'; ctx.fillStyle='#33404f';
+  if(c.type==='DCMOTOR'){
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-18,0); ctx.moveTo(18,0); ctx.lineTo(40,0); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,18,0,7); ctx.stroke();
+    ctx.font='bold 13px sans-serif'; ctx.textAlign='center'; ctx.fillText('M',0,5);
+    const th=c._th||0;                                   // 转子指针随积分角旋转
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(11*Math.cos(th),11*Math.sin(th)); ctx.lineWidth=2.5; ctx.stroke(); ctx.lineWidth=2;
+    ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672';
+    ctx.fillText((Math.abs(c._w||0)*60/(2*Math.PI)).toFixed(0)+' rpm',0,32);
+    ctx.fillText('E='+(c._e||0).toFixed(2)+'V',0,43);
+  } else if(c.type==='SERVO'){
+    ctx.beginPath(); ctx.moveTo(-40,-20); ctx.lineTo(-26,-20); ctx.moveTo(-40,20); ctx.lineTo(-26,20); ctx.moveTo(26,0); ctx.lineTo(40,0); ctx.stroke();
+    rr(-26,-22,52,44,8);                                 // 机身
+    ctx.beginPath(); ctx.arc(0,0,12,0,7); ctx.stroke();  // 舵盘
+    const a=(c._ang==null?90:c._ang)*Math.PI/180;        // 摆臂：0°=右，90°=上，180°=左
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-22*Math.cos(a),-22*Math.sin(a)); ctx.lineWidth=3; ctx.stroke(); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,3,0,7); ctx.fill();
+    ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672'; ctx.textAlign='center';
+    ctx.fillText((c._ang==null?90:c._ang).toFixed(0)+'° · '+(c._pw||0).toFixed(2)+'ms',0,36);
+    ctx.textAlign='left'; ctx.fillText('+',-24,-26); ctx.fillText('−',-24,31);
+    ctx.textAlign='right'; ctx.fillText('SIG',34,-26); ctx.textAlign='center';
+  } else if(c.type==='SPDT'){
+    ctx.beginPath(); ctx.moveTo(-40,0); ctx.lineTo(-24,0); ctx.moveTo(24,-20); ctx.lineTo(40,-20); ctx.moveTo(24,20); ctx.lineTo(40,20); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-24,0,2.5,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(24,-20,2.5,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(24,20,2.5,0,7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-24,0); ctx.lineTo(22,c.pos?18:-18); ctx.lineWidth=2.5; ctx.stroke(); ctx.lineWidth=2; // 摆杆
+    ctx.font='9px sans-serif'; ctx.fillStyle='#5c6672'; ctx.textAlign='center';
+    ctx.fillText('A',32,-26); ctx.fillText('B',32,32);
+    ctx.fillText(c.pos?'COM→B':'COM→A',0,40);
+  }
   for(const p of pinsOf(c)){ ctx.beginPath(); ctx.arc(p.x-c.x,p.y-c.y,3,0,7); ctx.fillStyle='#2f6bff'; ctx.fill(); }
 }
 /* M6-2：555 定时器（行为级 DIP 符号） */
@@ -1276,7 +1439,8 @@ const cvEl=cv;
 function evPos(e){ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
 const snap=p=>({x:Math.round(p.x/GRID)*GRID,y:Math.round(p.y/GRID)*GRID});
 const DIMS={AND:{w:48,h:26},OR:{w:48,h:26},XOR:{w:48,h:26},NOT:{w:48,h:22},TFF:{w:46,h:30},CLK:{w:24,h:24},IN:{w:24,h:24},PROBE:{w:18,h:20},SEG7:{w:56,h:44},
-  NPN:{w:30,h:34},PNP:{w:30,h:34},NMOS:{w:28,h:34},PMOS:{w:28,h:34},OPAMP:{w:36,h:32},T555:{w:40,h:56},RELAY:{w:42,h:34}};
+  NPN:{w:30,h:34},PNP:{w:30,h:34},NMOS:{w:28,h:34},PMOS:{w:28,h:34},OPAMP:{w:36,h:32},T555:{w:40,h:56},RELAY:{w:42,h:34},
+  DCMOTOR:{w:24,h:24},SERVO:{w:30,h:26},BTN:{w:28,h:20},SPDT:{w:34,h:26}};
 const hitComp=p=>comps.find(c=>{
   if(c.type==='IC'||c.type==='MCU'){ const g=icGeom(c); return Math.abs(p.x-c.x)<34&&Math.abs(p.y-c.y)<g.hh+4; }
   const d=DIMS[c.type]||{w:28,h:28}; return Math.abs(p.x-c.x)<d.w&&Math.abs(p.y-c.y)<d.h;
@@ -1290,8 +1454,9 @@ function hitWire(p){
   }
   return null;
 }
-let dragC=null, dragOff=null, dragStart=null, dragSnapJson=null;
+let dragC=null, dragOff=null, dragStart=null, dragSnapJson=null, pressC=null;
 cv.addEventListener('mousemove',e=>{ mouse=evPos(e);
+  if(pressC&&dragC===pressC){ pressC.closed=false; pressC=null; topoDirty=true; }   // 按住按钮时拖动 = 改为移动元件
   if(dragC){ const p=evPos(e), s=snap({x:p.x-dragOff.x,y:p.y-dragOff.y});
     if(s.x!==dragC.x||s.y!==dragC.y){ dragC.x=s.x; dragC.y=s.y; topoDirty=true; } }
 });
@@ -1301,6 +1466,7 @@ cv.addEventListener('mousedown',e=>{
   const pin=hitPin(p); if(pin){ wireFrom={...pin}; return; }
   const c=hitComp(p);
   if(c){
+    if(c.type==='BTN'){ pressC=c; c.closed=true; topoDirty=true; }   // 按钮：按住闭合，松开断开
     if(e.shiftKey){ const i=selComps.indexOf(c); if(i>=0) selComps.splice(i,1); else if(selComps.length<4) selComps.push(c); }
     else selComps=[c];
     propsTarget=c; showProps(); dragC=c; dragOff={x:p.x-c.x,y:p.y-c.y};
@@ -1314,6 +1480,7 @@ cv.addEventListener('mousedown',e=>{
 window.addEventListener('mouseup',()=>{
   if(dragC&&dragSnapJson&&(dragC.x!==dragStart.x||dragC.y!==dragStart.y)) pushUndoJson(dragSnapJson);
   dragC=null; dragOff=null; dragStart=null; dragSnapJson=null;
+  if(pressC){ pressC.closed=false; pressC=null; topoDirty=true; }   // 按钮：松开断开
 });
 cv.addEventListener('mouseup',e=>{
   if(wireFrom){
@@ -1325,6 +1492,7 @@ cv.addEventListener('mouseup',e=>{
 cv.addEventListener('dblclick',e=>{
   const c=hitComp(evPos(e));
   if(c&&c.type==='SW'){ c.closed=!c.closed; topoDirty=true; showProps(); }
+  if(c&&c.type==='SPDT'){ c.pos=c.pos?0:1; topoDirty=true; showProps(); }
   if(c&&c.type==='IN'){ c.on=!c.on; showProps(); }
 });
 window.addEventListener('keydown',e=>{
@@ -1370,6 +1538,14 @@ function showProps(){
   if(c.type==='RELAY') h+=`<div class="row"><label>线圈电阻（Ω）</label><input id="prcoil" type="number" step="any" value="${c.rcoil}"></div>
     <div class="row"><label>额定电压（V）</label><input id="pvolts" type="number" step="any" value="${c.volts}"></div>
     <div class="row"><label>触点</label><div>${c._en?'吸合：COM–NO 导通':'释放：COM–NC 导通'}（≥70% 额定电压吸合）</div></div>`;
+  if(c.type==='DCMOTOR') h+=`<div class="row"><label>电枢电阻 Ra（Ω）</label><input id="pra" type="number" step="any" value="${c.ra}"></div>
+    <div class="row"><label>电机常数 Ke=Kt（V·s/rad = N·m/A）</label><input id="pke" type="number" step="any" value="${c.ke}"></div>
+    <div class="row"><label>转动惯量 J（kg·m²）</label><input id="pjj" type="number" step="any" value="${c.j}"></div>
+    <div class="row"><label>摩擦系数 B（N·m·s）</label><input id="pbf" type="number" step="any" value="${c.bf}"></div>`;
+  if(c.type==='SERVO') h+=`<div class="row"><label>状态</label><div>角度 ${(c._ang==null?90:c._ang).toFixed(1)}° · 脉宽 ${(c._pw||0).toFixed(2)} ms</div></div>
+    <div class="row"><label>说明</label><div style="font-size:11px;color:var(--muted)">SIG 接 50Hz 脉宽信号：1ms→0°，1.5ms→90°，2ms→180°；无信号回中位</div></div>`;
+  if(c.type==='BTN') h+=`<div class="row"><label>状态</label><div>${c.closed?'按下（导通）':'松开（断开）'} · 画布上按住闭合、松开断开，拖动可移位</div></div>`;
+  if(c.type==='SPDT') h+=`<div class="row"><label>状态</label><div>${c.pos?'COM→B':'COM→A'}（双击切换）</div></div>`;
   if(c.type==='POT') h+=`<div class="row"><label>位置（%）</label><input id="pr" type="range" min="0" max="100" value="${c.ratio}"></div>
     <div class="row"><label>当前阻值</label><div id="prv">${fmtR(Math.max(10,c.rmax*c.ratio/100))}</div></div>`;
   if(c.type==='C') h+=`<div class="row"><label>容值（F）</label><input id="pv" type="number" step="any" value="${c.val}"></div>`;
@@ -1426,6 +1602,10 @@ function showProps(){
   onChg('pbeta',v=>{ c.beta=Math.max(100,parseFloat(v)||3950); topoDirty=true; });
   onChg('prcoil',v=>{ c.rcoil=Math.max(1,parseFloat(v)||200); topoDirty=true; });
   onChg('pvolts',v=>{ c.volts=Math.max(0.5,parseFloat(v)||5); topoDirty=true; });
+  onChg('pra',v=>{ c.ra=Math.max(0.1,parseFloat(v)||5); topoDirty=true; });
+  onChg('pke',v=>{ c.ke=Math.max(1e-5,parseFloat(v)||0.02); });
+  onChg('pjj',v=>{ c.j=Math.max(1e-7,parseFloat(v)||1e-5); });
+  onChg('pbf',v=>{ c.bf=Math.max(0,parseFloat(v)||1e-4); });
   const mcEl=g('pmcu');
   if(mcEl) mcEl.onchange=()=>{ pushUndo(); c.prog=mcEl.value; c._src=null; setStatus('MCU 程序已更新，重新编译并从头执行'); };
   const prEl=g('pr');
@@ -1463,6 +1643,8 @@ setInterval(()=>{   // 属性面板实时刷新
   } else {
     txt=`${compV(c).toFixed(3)} V · ${(Math.abs(c.cur||0)*1000).toFixed(2)} mA`;
     if(c.type==='NPN'||c.type==='PNP') txt+=` · ${bjtRegion(c)}`;
+    if(c.type==='DCMOTOR') txt+=` · ${(Math.abs(c._w||0)*60/(2*Math.PI)).toFixed(0)} rpm`;
+    if(c.type==='SERVO') txt+=` · ${(c._ang==null?90:c._ang).toFixed(0)}°`;
   }
   const wm=stressOf(c); if(wm) txt+=` · ⚠ ${wm}`;   // M9：属性面板同步显示超限告警
   rt.textContent=txt;
@@ -1483,6 +1665,7 @@ const PIN_NAMES = {
   NPN:['B','C','E'], PNP:['B','C','E'], NMOS:['G','D','S'], PMOS:['G','D','S'],
   OPAMP:['IN−','IN+','OUT'], T555:['TRIG','THR','DIS','VCC','OUT','GND'],
   LDR:['1','2'], NTC:['1','2'], RELAY:['线圈+','线圈−','NC','COM','NO'],
+  DCMOTOR:['+','−'], SERVO:['+','−','SIG'], BTN:['1','2'], SPDT:['COM','A','B'],
 };
 /* key -> 友好标签列表（同一网格点可能叠多个引脚，如"4017·GND"与"导线端点"） */
 function pinLabelMap(){
@@ -1598,6 +1781,7 @@ const LIMITS={
   R:{p:0.25}, POT:{p:0.5},                       // 1/4W 电阻、1/2W 电位器
   LDR:{p:0.25}, NTC:{p:0.25},                    // 传感器同 1/4W 档位
   NPN:{i:0.1}, PNP:{i:0.1}, NMOS:{i:0.2}, PMOS:{i:0.2},
+  DCMOTOR:{i:1.5},                             // 直流电机堵转/过载电流告警
 };
 function stressOf(c){
   const L=LIMITS[c.type]; if(!L) return null;
@@ -1644,6 +1828,10 @@ function drawMeter(){
     if(t==='LDR') title+=' '+fmtR(c._r||ldrR(c));
     if(t==='NTC') title+=' '+fmtR(c._r||ntcR(c));
     if(t==='RELAY') title+=c._en?'（吸合）':'（释放）';
+    if(t==='DCMOTOR') title+=` ${(Math.abs(c._w||0)*60/(2*Math.PI)).toFixed(0)}rpm`;
+    if(t==='SERVO') title+=` ${(c._ang==null?90:c._ang).toFixed(0)}°`;
+    if(t==='SPDT') title+=c.pos?'（COM→B）':'（COM→A）';
+    if(t==='BTN') title+=c.closed?'（按下）':'（松开）';
     if(t==='POT') title+=' '+fmtR(Math.max(10,c.rmax*c.ratio/100));
     if(t==='C') title+=' '+fmtSI(c.val,'F');
     if(t==='L') title+=' '+fmtSI(c.val,'H');
@@ -1665,6 +1853,8 @@ function drawMeter(){
       const v=compV(c), i=c.cur||0;
       rows=[['电压',fmtSI(v,'V')],['电流',fmtSI(Math.abs(i),'A')],['功率',fmtSI(Math.abs(v*i),'W')]];
       if(t==='NPN'||t==='PNP') rows.push(['工作区',bjtRegion(c)]);
+      if(t==='DCMOTOR') rows.push(['转速',(Math.abs(c._w||0)*60/(2*Math.PI)).toFixed(0)+' rpm'],['反电动势',fmtSI(c._e||0,'V')]);
+      if(t==='SERVO') rows.push(['角度',(c._ang==null?90:c._ang).toFixed(1)+'°'],['脉宽',(c._pw||0).toFixed(2)+' ms']);
     }
     const wm=stressOf(c); if(wm) rows.push(['⚠ 告警',wm,'warn']);
   } else {
@@ -1850,6 +2040,12 @@ const PAL=[
   ['IC:4013',IC_ICON,'4013 双D'],
   ['IC:7447',IC_ICON,'7447 七段低'],
   ['IC:4051',IC_ICON,'4051 模拟多路'],
+  ['IC:7402',IC_ICON,'7402 或非'],
+  ['IC:7473',IC_ICON,'7473 JK'],
+  ['IC:7490',IC_ICON,'7490 十进计数'],
+  ['IC:7493',IC_ICON,'7493 二进制'],
+  ['IC:74164',IC_ICON,'74164 串入并出'],
+  ['IC:4060',IC_ICON,'4060 分频'],
   {g:'微控制器'},
   ['MCU','M-10 -9 h20 v18 h-20 z M-4 -5 h8 M-4 0 h8 M-4 5 h8','MCU 8 位'],
   ['T555','M-13 -9 h26 v18 h-26 z M-8 -4 h8 M-8 1 h12 M-8 6 h6','555 定时器'],
@@ -1857,6 +2053,10 @@ const PAL=[
   ['LDR','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M3 -9 l4 4 m0 -2.5 l-2.5 2.5 M9 -9 l4 4 m0 -2.5 l-2.5 2.5','光敏电阻'],
   ['NTC','M-14 0 l3 -5 l4 10 l4 -10 l4 10 l3 -5 M-8 8 l16 -16','热敏电阻'],
   ['RELAY','M-15 -7 h9 v14 h-9 z M0 0 h5 M9 5 h5 M9 5 l5 -10','继电器'],
+  ['DCMOTOR','M-9 0 a9 9 0 1 0 .1 0 M-3.5 -3.5 h7 v7 h-7 z','直流电机'],
+  ['SERVO','M-14 -7 h28 v14 h-28 z M0 0 l11 -7 M0 0 a2 2 0 1 0 .1 0','舵机'],
+  ['BTN','M-16 0 h6 M10 0 h6 M-10 -3 h20 M0 -3 v-5 m-3.5 0 h7','按钮'],
+  ['SPDT','M-16 6 h6 M10 -6 h6 M10 6 h6 M-10 6 L8 -4','拨动开关'],
 ];
 const palBox=document.getElementById('palette');
 for(const it of PAL){
