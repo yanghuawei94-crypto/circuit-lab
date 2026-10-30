@@ -79,15 +79,15 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 #topbar .menu button{display:block;width:100%;text-align:left;padding:5px 10px;border:0;background:none;font-size:12.5px;color:#222;border-radius:4px;white-space:nowrap;}
 #topbar .menu button:hover{background:#2f6bff;color:#fff;}
 #topbar .menu small{float:right;color:#999;margin-left:16px;}
-#speedWrap{display:flex;align-items:center;gap:5px;font-size:10px;color:#555;margin-left:6px;}
+#speedWrap{display:flex;align-items:center;gap:5px;font-size:10px;color:#555;margin-left:6px;white-space:nowrap;}
 #speed{padding:3px 4px;border:1px solid #c3c0c3;border-radius:4px;font-size:11px;background:#fff;}
 #status{margin-left:auto;padding-left:10px;font-size:11px;color:#666;max-width:260px;align-self:center;}
 #main{grid-template-columns:1fr 236px;grid-template-rows:1fr 196px;background:#fff;}
 #main.noScope{grid-template-rows:1fr 0;}
 #cvWrap{grid-column:1;grid-row:1;background:#fff;}
 #scopeWrap{grid-column:1;grid-row:2;background:#565656;border-top:1px solid #3d3d3d;}
-#props{grid-column:2;grid-row:1/3;background:var(--panel);border-left:1px solid #b8b5b8;padding:0;font-size:12px;}
-#propsTitle{position:sticky;top:0;z-index:2;margin:0;padding:8px 12px;font-size:12px;font-weight:600;letter-spacing:0;color:#333;background:linear-gradient(#d9d6d9,#c9c6c9);border-bottom:1px solid #a9a6a9;}
+#props{grid-column:2;grid-row:1/3;background:#fff;border-left:1px solid #b8b5b8;padding:0;font-size:12px;}
+#props h4#propsTitle{position:sticky;top:0;z-index:2;margin:0;padding:9px 12px;font-size:12px;font-weight:700;letter-spacing:0;color:#fff;background:linear-gradient(#838383,#6f6f6f);border-bottom:1px solid #585858;}
 #propsBody{padding:2px 0;}
 #props .row{margin:0;padding:7px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e6e4e6;}
 #props .row label{font-size:12px;color:#222;margin:0;flex:1 1 auto;}
@@ -100,7 +100,7 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 .help{margin:8px 12px 14px;font-size:10px;line-height:1.9;color:#888;}
 .kbd{background:#eceaea;border:1px solid #d6d3d6;border-radius:3px;padding:0 4px;font-size:9px;}
 #scopeTitle{top:8px;left:10px;color:#eaeaea;font-size:11px;letter-spacing:.3px;}
-#scopeCh{top:26px;right:10px;font-size:10px;line-height:1.5;color:#eee;max-width:60%;}
+#scopeCh{top:auto;bottom:58px;right:8px;font-size:10px;line-height:1.5;color:#eee;max-width:60%;}
 #scopeCh .chbadge{display:block;background:rgba(20,20,20,.88);border-radius:3px;padding:2px 7px;margin-bottom:3px;font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #palette{display:none;position:absolute;top:96px;left:14px;width:392px;max-height:calc(100% - 120px);background:#fff;border:1px solid #b9b6b9;border-radius:9px;box-shadow:0 12px 34px rgba(0,0,0,.28);z-index:40;font-size:11px;overflow:hidden;}
 #palette.show{display:flex;flex-direction:column;}
@@ -1301,8 +1301,7 @@ function draw(){
 function drawComp(c){
   const sel=selComps.includes(c);
   ctx.save(); ctx.translate(c.x,c.y); if(c.rot) ctx.rotate(Math.PI/2);
-  const selR=c.type==='T555'?62:(c.type==='IC'||c.type==='MCU'?Math.max(36,icGeom(c).hh+9):30);
-  if(sel){ ctx.beginPath(); ctx.arc(0,0,selR,0,7); ctx.fillStyle='rgba(0,226,64,.10)'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='rgba(0,214,60,.5)'; ctx.stroke(); }
+  if(sel&&c.type!=='T555'&&c.type!=='IC'&&c.type!=='MCU'){ const d=DIMS[c.type]||{w:44,h:30}; selGlow(d.w+7,d.h+7); }
   ctx.lineWidth=2; ctx.strokeStyle='#141414'; ctx.fillStyle='#141414';
   ctx.font='10px sans-serif'; ctx.textAlign='center';
   if(c.type==='GND'){
@@ -1384,6 +1383,16 @@ function drawComp(c){
 const DIGI_SET=new Set(['AND','OR','XOR','NOT','TFF','CLK','IN','PROBE','SEG7']);
 const MECH_SET=new Set(['DCMOTOR','SERVO','SPDT','LAMP','RGBLED','STRAIN','PRESS']);
 function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.stroke(); }
+/* iCircuit 选中态：元件外一圈淡绿圆角光晕 */
+function selGlow(hw,hh){
+  const r=9, x=-hw, y=-hh, w=hw*2, h=hh*2;
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  ctx.fillStyle='rgba(0,228,70,.12)'; ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle='rgba(0,214,60,.5)'; ctx.stroke();
+  ctx.lineWidth=2; ctx.strokeStyle='#141414'; ctx.fillStyle='#141414';
+}
 function draw7seg(cx,cy,n){
   const SEG={a:[-12,-26,12,-26],b:[14,-24,14,-2],c:[14,2,14,24],d:[-12,26,12,26],e:[-14,2,-14,24],f:[-14,-24,-14,-2],g:[-12,0,12,0]};
   const MAP={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcfgd',10:'aefgbc',11:'fegcd',12:'afed',13:'bcdeg',14:'afged',15:'afge'};
@@ -1596,7 +1605,7 @@ function drawMech(c){
 function draw555(c,sel){
   ctx.lineWidth=2; ctx.strokeStyle='#141414'; ctx.fillStyle='#141414';
   rr(-38,-55,76,110,8);
-  if(sel){ ctx.strokeStyle='rgba(0,214,60,.9)'; ctx.lineWidth=3; rr(-41,-58,82,116,9); ctx.strokeStyle='#141414'; ctx.lineWidth=2; }
+  if(sel){ ctx.fillStyle='rgba(0,235,80,.16)'; ctx.fill(); ctx.strokeStyle='rgba(0,220,60,.95)'; ctx.lineWidth=3; rr(-41,-58,82,116,9); ctx.strokeStyle='#141414'; ctx.lineWidth=2; ctx.fillStyle='#141414'; }
   ctx.font='bold 13px sans-serif'; ctx.fillText('555',0,-36);
   ctx.font='9px sans-serif'; ctx.fillStyle='#2b2b2b';
   ctx.textAlign='left';
@@ -1625,7 +1634,7 @@ function drawIC(c,sel){
   const g=icGeom(c), sp=g.sp, hh=g.hh, hw=34;
   ctx.lineWidth=2; ctx.strokeStyle='#141414'; ctx.fillStyle='#141414';
   rr(-hw,-hh,hw*2,hh*2,7);
-  if(sel){ ctx.strokeStyle='rgba(0,214,60,.9)'; ctx.lineWidth=3; rr(-hw-3,-hh-3,hw*2+6,hh*2+6,8); ctx.strokeStyle='#141414'; ctx.lineWidth=2; }
+  if(sel){ ctx.fillStyle='rgba(0,235,80,.16)'; ctx.fill(); ctx.strokeStyle='rgba(0,220,60,.95)'; ctx.lineWidth=3; rr(-hw-3,-hh-3,hw*2+6,hh*2+6,8); ctx.strokeStyle='#141414'; ctx.lineWidth=2; ctx.fillStyle='#141414'; }
   ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#141414';
   ctx.fillText(c.type==='MCU'?'MCU':c.kind,0,-hh-7);
   const pins=icPins(c);
@@ -1690,8 +1699,9 @@ function drawScope(){
   for(let gx=0;gx<=w;gx+=48){ sctx.beginPath(); sctx.moveTo(gx+.5,0); sctx.lineTo(gx+.5,wh); sctx.stroke(); }
   document.getElementById('scopeTitle').textContent =
     n?`示波器 · ${n} 通道`:'示波器：点击元件加入通道';
+  document.getElementById('scopeCh').style.bottom=(tableH+6)+'px';
   document.getElementById('scopeCh').innerHTML =
-    selComps.map((c,i)=>`<span class="chbadge" style="border-left:3px solid ${CH_COLORS[i]}">CH${i+1} ${DEF[c.type].name} = ${compV(c).toFixed(2)} V</span>`).join('');
+    selComps.map(c=>`<span class="chbadge">${DEF[c.type].name} = ${compV(c).toFixed(3)}</span>`).join('');
   if(!n) return;
   let max=1e-6;
   for(const c of selComps){ const b2=chBuf.get(c.id)||[]; for(const v of b2) max=Math.max(max,Math.abs(v)); }
@@ -2640,6 +2650,7 @@ function demo555(){
   W(380,500,500,500); W(500,500,680,500); W(680,500,760,500);
   W(760,220,760,500);                          // 电源负极 → 地
 
+  topoDirty=true;                          // 拓扑变化，下一帧重建并查集（否则沿用上一个电路的节点表，解算矩阵奇异）
   selComps=[t5,led];
   setStatus('555 无稳态：R1=10k R2=47k C=10µF → f≈1.39Hz，通道1=输出，通道2=LED');
 }
