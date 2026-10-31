@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M18 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路（7400/7408/7432/7486/7404/7474/74138/4017/4066/74151/74194/74283/74175/7485/4511/74153/74181/4047/4013/7447/4051/7402/7473/7490/7493/74164/4060 及新增 74192/74193 可逆计数、74273 八 D、74157 四 2 选 1、74393 双计数、74163 同步计数）、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机（反电动势+转速积分）、舵机（1–2ms 脉宽→0–180°）、按钮（按住闭合）与 SPDT 拨动开关、灯泡（功率→暖色光晕）、RGB 三色灯（三通道混色）、应变片（ΔR/R=GF·ε 形变滑块）、压力传感器（比例电压输出），非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），元件库按 Sources/Basic/Diodes/Transistors/Analog/TTL/CMOS 库名分组；新增 XBP1 波特图仪（20 Hz–5 kHz 对数扫描，测幅频 dB 与相频）与 XLA1 逻辑分析仪（自动抓 8 个翻转节点的时序）；仪器三视图切换（面板 → 符号 → 图标，对齐 Multisim Icon/Symbol/Panel），逻辑探针 PROBE 手动接入 XLA1 通道（P1–P4 优先显示）；仪器布局记忆（开关、拖动位置、三视图存本机，刷新后原样恢复）；M18 新增：画布 Paper 纸面主题（Auto/Paper 切换、本机记忆，配色取自 iCircuit 1.16 像素取样）、顶栏仿真带宽显示（5 kHz，Nyquist=1/(2·DT)）、元件中文名对齐 iCircuit（发光二极管、双极晶体管、单刀单掷/单刀双掷开关、n-MOSFET、直流电动机、伺服电机、RGB LED）。">
-<title>M18 · 电路实验室</title>
+<meta name="description" content="M19 电路实验室：交流/方波源、二极管、LED、电位器、NPN/PNP 三极管、MOSFET、运算放大器、555 定时器、33 种 74xx/4xxx 集成电路、8 位 MCU 脚本仿真、光敏/热敏传感器、继电器、直流电机、舵机、按钮与 SPDT 开关、灯泡、RGB 三色灯、应变片、压力传感器，非线性牛顿迭代引擎，四通道示波器，电流动画，撤销/重做，本机自动保存与 JSON 导入导出，桥式整流/计数器/共射放大/MOS 开关/运放放大/555 闪烁/4017 流水灯等预置演示，并查集节点分析可视化，万用表探针实时读数、暂停单步推进、元件过流/超功率告警标记；Multisim 风格仪器面板 XMM1 万用表 / XFG1 函数发生器 / XWM1 瓦特计（LCD 读数、可拖动），XBP1 波特图仪与 XLA1 逻辑分析仪，仪器三视图切换与布局记忆；M18：Paper 纸面主题、仿真带宽显示、元件中文名对齐 iCircuit；M19 新增（Multisim 14.3 真机取证融合）：Multisim 点阵画布主题（白底次点 20px/主点 100px 两级点阵，取自 Multisim 像素取样）、元件库 Group 大类下拉筛选与底部 Components 计数 / Filter 状态条（对齐 Multisim Select a Component 选取器布局）。">
+<title>M19 · 电路实验室</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔌</text></svg>">
 <style>
 :root{--blue:#2f6bff;--orange:#e2762d;--bg:#f0f2f7;--card:#fff;--ink:#17202a;--muted:#5c6672;--rule:#dde2ec;}
@@ -117,6 +117,11 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
 .pal:hover{border-color:#c8d4e8;background:#f2f6fd;color:#111;}
 .pal svg path{stroke:#1d1d1d;}
 #palette .pal span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* M19 Multisim 元件选取器：Group 筛选下拉 + 底部状态条（取证 MS5：Group: <All groups> / Components: N / Filter: off） */
+#palGroup{padding:4px 4px;border:1px solid #c4c1c4;border-radius:5px;font-size:11px;background:#fff;outline:none;max-width:118px;}
+#palFoot{display:flex;align-items:center;gap:10px;padding:5px 10px;border-top:1px solid #dddadd;background:#f0eef0;color:#6f6f6f;font-size:10px;white-space:nowrap;}
+#palFoot b{color:#333;font-weight:600;}
+#palFoot .pfilter{margin-left:auto;}
 /* ===== Multisim 风格仪器面板（浮于画布之上、可拖动、LCD 读数） ===== */
 #instLayer{position:absolute;inset:0;pointer-events:none;z-index:20;}
 .inst{position:absolute;pointer-events:auto;width:212px;display:none;background:linear-gradient(#e9e6e3,#d2cecb);border:1px solid #8f8b89;border-radius:7px 7px 5px 5px;box-shadow:0 10px 26px rgba(0,0,0,.26),inset 0 1px 0 #fff;font-size:11px;color:#242424;}
@@ -200,15 +205,16 @@ body{background:var(--chrome);font-family:-apple-system,BlinkMacSystemFont,"Helv
   </div>
   <span class="sep"></span>
   <label id="speedWrap">速度<select id="speed"><option value="1">×1</option><option value="4" selected>×4</option><option value="16">×16</option></select></label>
-  <label id="themeWrap">主题<select id="themeSel"><option value="auto">Auto</option><option value="paper">Paper</option></select></label>
+  <label id="themeWrap">主题<select id="themeSel"><option value="auto">Auto</option><option value="paper">Paper</option><option value="multisim">Multisim</option></select></label>
   <span id="bwTag" title="仿真带宽 = 1/(2·DT) = 5 kHz（Nyquist 采样定理；DT=0.1 ms 固定步长；波特图扫描上限同为 5 kHz）">带宽 5 kHz</span>
   <span id="status">就绪</span>
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
 </div>
 <div id="main">
   <div id="palette">
-    <div id="palHead"><input id="palSearch" placeholder="元件库筛选" autocomplete="off"><button id="palClose" title="关闭">✕</button></div>
+    <div id="palHead"><select id="palGroup" title="Group：按元件大类筛选（Multisim 取证 MS7）"></select><input id="palSearch" placeholder="元件筛选" autocomplete="off"><button id="palClose" title="关闭">✕</button></div>
     <div id="palBody"></div>
+    <div id="palFoot"><span>Components: <b id="palCount">0</b></span><span class="pfilter" id="palFilter">Filter: off</span></div>
   </div>
   <div id="cvWrap"><canvas id="cv"></canvas><div id="netPanel" style="display:none"></div>
     <div id="instLayer">
@@ -1364,16 +1370,34 @@ function draw(){
   ctx.clearRect(0,0,w,h);
   /* M18 画布主题：Auto=白底浅灰蓝方格（iCircuit 1.16 取样 #D8DAE0 / #EEF0F5）；
      Paper=米色纸面 + 绿灰网格（iCircuit Lamp.cir 像素取样，台账 A22：底 #FCFDE8 / 线 #CCE1D9），
-     次线同色半透明、主线全色；导线仍按电压着色（iCircuit 的「电压颜色」是文档级开关，不随主题） */
+     次线同色半透明、主线全色；导线仍按电压着色（iCircuit 的「电压颜色」是文档级开关，不随主题）；
+     M19 Multisim=白底点阵网格（台账 MS11/MS12：纸张 rgb(255,255,255)、点阵非线格、主次两级点） */
   const paper=(cvTheme==='paper');
   ctx.fillStyle=paper?'#FCFDE8':'#ffffff'; ctx.fillRect(0,0,w,h);
   ctx.lineWidth=1;
+  if(cvTheme==='multisim'){
+    /* M19：点阵缓存离屏画布，避免每帧 3600+ 次 fillRect；次点 20px（2 格）#ECECEC、主点 100px（10 格）#D8D8D8，
+       对应 MS12「暗点极淡灰、主点行更深」的两级点阵 */
+    const key=w+'x'+h;
+    if(!window._msGridCv||window._msGridKey!==key){
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      const g=c.getContext('2d');
+      for(let gx=20;gx<w;gx+=20) for(let gy=20;gy<h;gy+=20){
+        const major=(gx%100===0&&gy%100===0);
+        g.fillStyle=major?'#d8d8d8':'#ececec';
+        g.fillRect(gx-(major?1:.5), gy-(major?1:.5), major?2:1, major?2:1);
+      }
+      window._msGridCv=c; window._msGridKey=key;
+    }
+    ctx.drawImage(window._msGridCv,0,0);
+  }else{
   ctx.strokeStyle=paper?'rgba(204,225,217,.5)':'#f0f2f7';
   for(let gx=0;gx<=w;gx+=20){ ctx.beginPath(); ctx.moveTo(gx+.5,0); ctx.lineTo(gx+.5,h); ctx.stroke(); }
   for(let gy=0;gy<=h;gy+=20){ ctx.beginPath(); ctx.moveTo(0,gy+.5); ctx.lineTo(w,gy+.5); ctx.stroke(); }
   ctx.strokeStyle=paper?'#CCE1D9':'#e2e5ec';
   for(let gx=0;gx<=w;gx+=100){ ctx.beginPath(); ctx.moveTo(gx+.5,0); ctx.lineTo(gx+.5,h); ctx.stroke(); }
   for(let gy=0;gy<=h;gy+=100){ ctx.beginPath(); ctx.moveTo(0,gy+.5); ctx.lineTo(w,gy+.5); ctx.stroke(); }
+  }
   for(const wd of wires){
     const va=nodeV[nodeAt(wd.a)-1]||0, vb=nodeV[nodeAt(wd.b)-1]||0;
     const col=voltColor(nodeAt(wd.a)?va:0);
@@ -2825,12 +2849,14 @@ const PAL=[
   ['PRESS','M-14 -6 h6 M-14 6 h6 M8 0 h6 M-8 -8 h16 v16 h-16 z M-3 0 h6 M0 -3 v6','压力传感器'],
 ];
 const palBox=document.getElementById('palBody');
+let _curG='';
 for(const it of PAL){
   if(it.g){
+    _curG=it.g;
     const h4=document.createElement('h4'); h4.textContent=it.g; palBox.appendChild(h4); continue;
   }
   const [t,d,nm]=it;
-  const el=document.createElement('div'); el.className='pal';
+  const el=document.createElement('div'); el.className='pal'; el.dataset.g=_curG;
   el.innerHTML=`<svg width="34" height="22" viewBox="-17 -11 34 22"><path d="${d}" fill="none" stroke="#1d1d1d" stroke-width="1.4"/></svg><span>${nm||DEF[t].name}</span>`;
   el.onclick=()=>{
     const [tt,kk]=t.split(':'); placing=tt; placingKind=kk||null; placingRot=0; wireFrom=null;
@@ -2840,6 +2866,29 @@ for(const it of PAL){
   };
   palBox.appendChild(el);
 }
+/* M19 Multisim 元件选取器特征（取证 MS5/MS7）：Group 大类下拉筛选 + 底部
+   "Components: N / Filter: on|off" 状态条；组选项即 Multisim Group 大类命名 */
+const palGroupSel=document.getElementById('palGroup');
+(function(){
+  const groups=[];
+  for(const i of PAL){ if(i.g&&!groups.includes(i.g)) groups.push(i.g); }
+  palGroupSel.innerHTML='<option value="">全部 All groups</option>'+groups.map(g=>`<option value="${g}">${g}</option>`).join('');
+})();
+function palApply(){
+  const gsel=palGroupSel.value, q=document.getElementById('palSearch').value.trim().toLowerCase();
+  let n=0;
+  document.querySelectorAll('#palBody .pal').forEach(el=>{
+    const okG=!gsel||el.dataset.g===gsel;
+    const okQ=!q||el.textContent.toLowerCase().includes(q);
+    el.style.display=(okG&&okQ)?'':'none';
+    if(okG&&okQ) n++;
+  });
+  document.querySelectorAll('#palBody h4').forEach(h=>{ h.style.display=(q||gsel)?'none':''; });
+  document.getElementById('palCount').textContent=n;
+  document.getElementById('palFilter').textContent='Filter: '+(q||gsel?'on':'off');
+}
+palGroupSel.onchange=palApply;
+palApply();
 
 /* ================= 顶栏 ================= */
 document.getElementById('runBtn').onclick=e=>{
@@ -2874,11 +2923,7 @@ document.getElementById('palClose').onclick=()=>{
   document.getElementById('palette').classList.remove('show');
   document.getElementById('libBtn').classList.remove('on');
 };
-document.getElementById('palSearch').oninput=e=>{
-  const q=e.target.value.trim().toLowerCase();
-  document.querySelectorAll('#palBody .pal').forEach(el=>{ el.style.display=el.textContent.toLowerCase().includes(q)?'':'none'; });
-  document.querySelectorAll('#palBody h4').forEach(h=>{ h.style.display=q?'none':''; });
-};
+document.getElementById('palSearch').oninput=()=>palApply();
 document.getElementById('scopeBtn').onclick=e=>{
   const m=document.getElementById('main'), hide=!m.classList.contains('noScope');
   m.classList.toggle('noScope',hide);
@@ -2886,8 +2931,8 @@ document.getElementById('scopeBtn').onclick=e=>{
   e.currentTarget.classList.toggle('on',!hide);
 };
 document.getElementById('speed').onchange=e=>speed=+e.target.value;
-/* M18：画布主题 Auto / Paper，选择存本机（tick() 在脚本末尾才首帧绘制，此处恢复先于首绘） */
-try{ const _th=localStorage.getItem(STORE_KEY+':theme'); if(_th==='paper') cvTheme='paper'; }catch(e){}
+/* M18/M19：画布主题 Auto / Paper / Multisim，选择存本机（tick() 在脚本末尾才首帧绘制，此处恢复先于首绘） */
+try{ const _th=localStorage.getItem(STORE_KEY+':theme'); if(_th==='paper'||_th==='multisim') cvTheme=_th; }catch(e){}
 const themeSelEl=document.getElementById('themeSel');
 if(themeSelEl){
   themeSelEl.value=cvTheme;
